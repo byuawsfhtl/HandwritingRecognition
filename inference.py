@@ -8,17 +8,18 @@ import pandas as pd
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
 from model.model import Recognizer # noqa
-from data.inference_sequence import InferenceSequence # noqa
+from data.sequence import InferenceSequence # noqa
 from util.encoder import Encoder # noqa
-from util.arguments import parse_arguments # noqa
+from util.arguments import parse_inference_arguments # noqa
 
 
 def inference(args):
     """
     Perform inference on images specified by the user
 
-    Command Line Arguments:
     python inference.py --img_path <IMG_PATH> --out_path <OUTPUT_PATH> --console
+
+    Command Line Arguments:
     * img_path (required): The path to images to be inferred
     * out_path (required if console not specified): The output path to the results of the inference
     * console (optional): Print inference results to the console and show images
@@ -27,7 +28,7 @@ def inference(args):
     :return: None
     """
     # Place command line arguments in arg_dict
-    arg_dict = parse_arguments(args)
+    arg_dict = parse_inference_arguments(args)
 
     # Set up verbose logging if it was specified
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = arg_dict['log_level']
