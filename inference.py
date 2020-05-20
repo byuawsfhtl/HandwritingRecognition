@@ -23,6 +23,7 @@ def inference(args):
     * img_path (required): The path to images to be inferred
     * out_path (required if console not specified): The output path to the results of the inference
     * console (optional): Print inference results to the console and show images
+    * log_level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
 
     :param args: Command line arguments
     :return: None
