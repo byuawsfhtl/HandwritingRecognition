@@ -1,0 +1,6 @@
+**__pycache__**
+*.idea
+*.csv
+data/training/*
+data/model_weights/
+*.tfrecords
