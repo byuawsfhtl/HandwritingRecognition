@@ -14,7 +14,7 @@ class ModelTrainer:
     Once the object is created, the __call__ method will train and return the results and the trained model.
     """
     def __init__(self, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
-                 lr=4e-4, char_set_path='./data/misc/char_set.json', max_seq_size=128):
+                 lr=4e-4, char_set_path='./data/misc/char_set.json', max_seq_size=128, weights_path=None):
         """
         Set up necessary variables that will be used during training, including the model, optimizer,
         encoder, and other metrics.
@@ -37,6 +37,9 @@ class ModelTrainer:
         self.val_dataset_size = val_dataset_size
 
         self.model = Recognizer()
+        if weights_path is not None: # Load the model weights before training - useful for fine-tuning
+            self.model.load_weights(weights_path)
+
         self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr)
         self.encoder = Encoder(char_set_path, max_sequence_size=max_seq_size)
 

@@ -49,6 +49,7 @@ def train_model(args):
     * max_seq_size (optional): The max number of characters in a line-level transcription (default: 128)
     * train_size (optional): The ratio used to determine the size of the train/validation sets (default: 0.8)
     * tfrecord_out (optional): The path to the created tfrecords file (default: './data/misc/data.tfrecords)
+    * weights_path (optional): The path to pre-trained model weights (default: None)
 
     :param args: command line arguments
     """
@@ -80,7 +81,7 @@ def train_model(args):
     # Create the train object and load in the configuration settings
     train = ModelTrainer(arg_dict['epochs'], arg_dict['batch_size'], train_dataset, train_dataset_size,
                          val_dataset, val_dataset_size, lr=arg_dict['learning_rate'],
-                         max_seq_size=arg_dict['max_seq_size'])
+                         max_seq_size=arg_dict['max_seq_size'], weights_path=arg_dict['weights_path'])
 
     # Train the model
     model, losses = train()

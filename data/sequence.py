@@ -36,7 +36,7 @@ class InferenceSequence(tf.keras.utils.Sequence):
         :param path: Filepath to the image to be opened
         :return: The image as a tensor
         """
-        img = Image.open(path)
+        img = Image.open(path).convert('L')
         img = resize_img(img, self.desired_size)
         x = tf.constant(img, dtype=tf.float32)
 
@@ -107,7 +107,7 @@ class TrainSequence(tf.keras.utils.Sequence):
         :param path: Filepath to the image to be opened
         :return: The image as a tensor
         """
-        img = Image.open(path)
+        img = Image.open(path).convert('L')
         img = resize_img(img, self.desired_size)
         x = tf.constant(img, dtype=tf.float32)
 
@@ -120,7 +120,11 @@ class TrainSequence(tf.keras.utils.Sequence):
         :param index: The index of the image/label to be retrieved
         :return: image and label as tensors
         """
-        img = self.tensor_image(os.path.join(self.img_path, self.df['word'][index] + '.png'))
+        img_name = self.df['word'][index]
+        if '.' not in img_name:
+            img_name += '.png'
+
+        img = self.tensor_image(os.path.join(self.img_path, img_name))
         img = tf.transpose(img)
         img = tf.constant(img, dtype=tf.float32)
         img = tf.expand_dims(img, 2)
