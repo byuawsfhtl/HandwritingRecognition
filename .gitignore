@@ -4,3 +4,4 @@
 data/training/*
 data/model_weights/
 *.tfrecords
+*/test_images/*
