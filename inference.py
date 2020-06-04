@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 
+from tqdm import tqdm
+
 # Don't print any logs when booting up TensorFlow
 # Comment out this line if you are running into issues running TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -46,7 +48,7 @@ def inference(args):
     inferences = []
 
     # Iterate through each of the images and perform inference
-    for img, img_name in sequence:
+    for img, img_name in tqdm(sequence):
         pred = model(img)
         best_path_pred = tf.argmax(pred, axis=2)
         str_pred = encoder.idxs_to_str_batch(best_path_pred)[0]
