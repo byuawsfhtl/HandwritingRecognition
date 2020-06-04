@@ -90,7 +90,7 @@ def train_model(args):
     model.save_weights(arg_dict['model_out'])
 
     # Print loss graph if command line argument specified it
-    if True:
+    if arg_dict['show_graphs']:
         show_loss_graph(losses[0], losses[1])
 
 
