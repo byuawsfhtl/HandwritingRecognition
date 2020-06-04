@@ -49,6 +49,7 @@ To continue on to the next image, simply close the image window.
 The full list of inference arguments include:
 * img_path (required): The path to images to be inferred
 * out_path (required if console not specified): The output path to the results of the inference
+* weights_path (optional): The path to the pre-trained model weights (default: ./data/model_weights/hwr_model/run1)
 * console (optional): Print inference results to the console and show images
 * log_level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
 
