@@ -34,6 +34,7 @@ The full list of parameters include:
 * max_seq_size (optional): The max number of characters in a line-level transcription (default: 128)
 * train_size (optional): The ratio used to determine the size of the train/validation sets (default: 0.8)
 * tfrecord_out (optional): The path to the created tfrecords file (default: './data/misc/data.tfrecords)
+* weights_path (optional): The path to pre-trained model weights (default: None)
 
 Inference can be run with the following command
 
