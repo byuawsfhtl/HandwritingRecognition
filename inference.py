@@ -42,7 +42,7 @@ def inference(args):
     model = Recognizer()
 
     # Load the pre-trained model weights
-    model.load_weights('./data/model_weights/hwr_model/run1')
+    model.load_weights(arg_dict['weights_path'])
 
     # Keep track of all inferences in list of tuples
     inferences = []

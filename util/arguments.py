@@ -15,6 +15,9 @@ def parse_inference_arguments(args):
         elif args[index] == '--out_path':
             index += 1
             arg_dict['out_path'] = args[index]
+        elif args[index] == '--weights_path':
+            index += 1
+            arg_dict['weights_path'] = args[index]
         elif args[index] == '--log_level':
             index += 1
             assert args[index] in ['0', '1', '2', '3']  # log_level must be 0-3
@@ -37,6 +40,8 @@ def parse_inference_arguments(args):
         arg_dict['console'] = False
     if 'log_level' not in arg_dict:
         arg_dict['log_level'] = '3'
+    if 'weights_path' not in arg_dict:
+        arg_dict['weights_path'] = './data/model_weights/hwr_model/run1'
 
     return arg_dict
 
