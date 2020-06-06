@@ -3,8 +3,8 @@ import pandas as pd
 from PIL import Image
 import os
 import csv
-from util.resize import resize_img
-from util.encoder import Encoder
+from src.util import resize_img
+from src.util import Encoder
 
 
 class InferenceSequence(tf.keras.utils.Sequence):

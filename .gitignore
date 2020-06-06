@@ -1,7 +1,7 @@
 **__pycache__**
 *.idea
 *.csv
-data/training/*
-data/model_weights/
+src/data/training/*
+src/data/model_weights/
 *.tfrecords
 */test_images/*

@@ -6,10 +6,10 @@ import os
 # Comment out this line if you are running into issues running TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from data.sequence import TrainSequence # noqa
-from util.arguments import parse_train_arguments # noqa
-from data.tfrecord import create_tfrecord_from_sequence, read_tfrecord # noqa
-from model.training import ModelTrainer # noqa
+from src.data import TrainSequence # noqa
+from src.util import parse_train_arguments # noqa
+from src.data.tfrecord import create_tfrecord_from_sequence, read_tfrecord # noqa
+from src.model.training import ModelTrainer # noqa
 
 
 def show_loss_graph(train_losses, val_losses):

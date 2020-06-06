@@ -9,10 +9,10 @@ from tqdm import tqdm
 # Comment out this line if you are running into issues running TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from model.model import Recognizer # noqa
-from data.sequence import InferenceSequence # noqa
-from util.encoder import Encoder # noqa
-from util.arguments import parse_inference_arguments # noqa
+from src.model import Recognizer # noqa
+from src.data import InferenceSequence # noqa
+from src.util import Encoder # noqa
+from src.util import parse_inference_arguments # noqa
 
 
 def inference(args):
@@ -39,7 +39,7 @@ def inference(args):
 
     # Create the required objects for inference
     sequence = InferenceSequence(arg_dict['img_path'])
-    encoder = Encoder('./data/misc/char_set.json')
+    encoder = Encoder('src/data/misc/char_set.json')
     model = Recognizer()
 
     # Load the pre-trained model weights
