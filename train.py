@@ -1,14 +1,14 @@
 import sys
-import matplotlib.pyplot as plt
 import os
+import matplotlib.pyplot as plt
 
 # Don't print any logs when booting up TensorFlow
 # Comment out this line if you are running into issues running TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from src.data import TrainSequence # noqa
-from src.util import parse_train_arguments # noqa
-from src.data.tfrecord import create_tfrecord_from_sequence, read_tfrecord # noqa
+from src.dataset.sequence import TrainSequence # noqa
+from src.util.arguments import parse_train_arguments # noqa
+from src.dataset.tfrecord import create_tfrecord_from_sequence, read_tfrecord # noqa
 from src.model.training import ModelTrainer # noqa
 
 

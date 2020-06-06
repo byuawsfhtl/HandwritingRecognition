@@ -2,17 +2,16 @@ import sys
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
-
 from tqdm import tqdm
 
 # Don't print any logs when booting up TensorFlow
 # Comment out this line if you are running into issues running TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from src.model import Recognizer # noqa
-from src.data import InferenceSequence # noqa
-from src.util import Encoder # noqa
-from src.util import parse_inference_arguments # noqa
+from src.model.model import Recognizer # noqa
+from src.dataset.sequence import InferenceSequence # noqa
+from src.util.encoder import Encoder # noqa
+from src.util.arguments import parse_inference_arguments # noqa
 
 
 def inference(args):
@@ -24,7 +23,7 @@ def inference(args):
     Command Line Arguments:
     * img_path (required): The path to images to be inferred
     * out_path (required if console not specified): The output path to the results of the inference
-    * weights_path (optional): The path to the pre-trained model weights (default: ./data/model_weights/hwr_model/run1)
+    * weights_path (required): The path to the pre-trained model weights
     * console (optional): Print inference results to the console and show images (default: None)
     * log_level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
 
@@ -39,7 +38,7 @@ def inference(args):
 
     # Create the required objects for inference
     sequence = InferenceSequence(arg_dict['img_path'])
-    encoder = Encoder('src/data/misc/char_set.json')
+    encoder = Encoder()
     model = Recognizer()
 
     # Load the pre-trained model weights

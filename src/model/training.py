@@ -1,8 +1,9 @@
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
-from src.model import Recognizer
-from src.util import Encoder
+
+from src.model.model import Recognizer
+from src.util.encoder import Encoder
 
 
 class ModelTrainer:
@@ -14,7 +15,7 @@ class ModelTrainer:
     Once the object is created, the __call__ method will train and return the results and the trained model.
     """
     def __init__(self, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
-                 lr=4e-4, char_set_path='./data/misc/char_set.json', max_seq_size=128, weights_path=None):
+                 lr=4e-4, char_set_path=None, max_seq_size=128, weights_path=None):
         """
         Set up necessary variables that will be used during training, including the model, optimizer,
         encoder, and other metrics.
@@ -26,7 +27,6 @@ class ModelTrainer:
         :param val_dataset: Validation Dataset that is mapped and batched (see train_model function for context)
         :param val_dataset_size: The number of images in the validation set
         :param lr: The learning rate of the model
-        :param char_set_path: The filepath to the json character set (see Encoder for context)
         :param max_seq_size: The maximum length of a line-level transcription (See Encoder for context)
         """
         self.epochs = epochs
@@ -41,7 +41,7 @@ class ModelTrainer:
             self.model.load_weights(weights_path)
 
         self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr)
-        self.encoder = Encoder(char_set_path, max_sequence_size=max_seq_size)
+        self.encoder = Encoder(char_set_path=char_set_path, max_sequence_size=max_seq_size)
 
         self.max_seq_size = max_seq_size
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')

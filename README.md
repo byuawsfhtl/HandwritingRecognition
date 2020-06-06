@@ -62,7 +62,7 @@ To continue on to the next image, simply close the image window.
 The full list of inference arguments include:
 * img_path (required): The path to images to be inferred
 * out_path (required if console not specified): The output path to the results of the inference
-* weights_path (optional): The path to the pre-trained model weights (default: ./data/model_weights/hwr_model/run1)
+* weights_path (required: The path to the pre-trained model weights
 * console (optional): Print inference results to the console and show images
 * log_level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
 
@@ -78,6 +78,7 @@ conda-build ./ -c defaults -c conda-forge
 `
 
 For the command to work, you may need to first activate the conda environment containing all of the project dependencies.
+
 `
 conda env create -f environment.yaml
 conda activate hwr_env

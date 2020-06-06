@@ -10,3 +10,5 @@ dependencies:
 - matplotlib=3.2.1
 - pillow=7.1.2
 - tqdm=4.38
+- editdistance=0.5.3
+- numpy=1.17.1

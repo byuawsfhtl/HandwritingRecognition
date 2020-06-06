@@ -34,14 +34,14 @@ def parse_inference_arguments(args):
         raise Exception('The img_path argument must be specified!')
     if 'out_path' not in arg_dict and 'console' not in arg_dict:
         raise Exception('The out_path argument must be specified if console output is not specified')
+    if 'weights_path' not in arg_dict:
+        raise Exception('The weights_path argument must be specified')
 
     # Set arguments to their defaults if not present on command line
     if 'console' not in arg_dict:
         arg_dict['console'] = False
     if 'log_level' not in arg_dict:
         arg_dict['log_level'] = '3'
-    if 'weights_path' not in arg_dict:
-        arg_dict['weights_path'] = './data/model_weights/hwr_model/run1'
 
     return arg_dict
 
