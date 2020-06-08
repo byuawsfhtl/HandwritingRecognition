@@ -26,9 +26,30 @@ This project can be used by cloning and repository and running manually. However
 
 ### Conda Usage
 
-Coming soon!
+Potentially, the easiest way to access the code is to import the [conda package](https://anaconda.org/byu-handwriting-lab/hwr)
+
+`
+conda install -c byu-handwriting-lab hwr
+`
+
+Code can then be accessed like any normal python package. For example, to use the un-trained recognition model,
+you could simply:
+
+`
+from hwr.model.model import Recognizer
+from hwr.util.encoder import Encoder
+import tensorflow as tf
+import numpy as np
+model = Recognizer()
+inp = tf.constant(np.random.randn(1, 1024, 64, 1), dtype=tf.float32)
+out = model(inp)
+prediction = encoder.idxs_to_str_batch(tf.argmax(out, axis=2))
+print('Prediction:', prediction)
+`
 
 ### Manual Usage
+
+Using the actual codebase, you have access to the ```train.py``` and ```inference.py``` scripts.
 
 Training can be run with the following command
 
@@ -74,7 +95,7 @@ to these files may need to take place if dependencies to the code base change. T
 following ```conda-build``` command.
 
 `
-conda-build ./ -c defaults -c conda-forge
+conda-build ./conda.recipe -c defaults -c conda-forge
 `
 
 For the command to work, you may need to first activate the conda environment containing all of the project dependencies.
