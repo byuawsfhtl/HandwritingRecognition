@@ -2,8 +2,8 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from src.model.model import Recognizer
-from src.util.encoder import Encoder
+from src.hwr.model import Recognizer
+from src.hwr.util import Encoder
 
 
 class ModelTrainer:
