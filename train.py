@@ -54,6 +54,10 @@ def train_model(args):
 
     :param args: command line arguments
     """
+
+    # Print available devices so we know if we are uses CPU or GPU
+    tf.print('Devices Available:', tf.config.list_physical_devices())
+
     # Place command line arguments in arg_dict
     arg_dict = parse_train_arguments(args)
 

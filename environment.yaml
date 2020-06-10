@@ -4,11 +4,10 @@ channels:
 - anaconda
 - conda-forge
 dependencies:
-- tensorflow=2.1.0
 - python=3.7.3
-- pandas=1.0.3
-- matplotlib=3.2.1
-- pillow=7.1.2
-- tqdm=4.38
-- editdistance=0.5.3
-- numpy=1.17.1
+- anaconda::tensorflow-gpu=2.1.0
+- anaconda::pandas=1.0.3
+- conda-forge::matplotlib=3.2.1
+- anaconda::pillow=7.1.2
+- anaconda::tqdm=4.31.1
+- conda-forge::editdistance=0.5.3

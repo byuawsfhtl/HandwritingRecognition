@@ -8,7 +8,7 @@ def create_tfrecord_from_sequence(sequence, tfrecord_path):
     :param sequence: The Keras sequence to load data of arbitrary format
     :param tfrecord_path: Filepath and name for location of TfRecord dataset
     """
-    print('Started creating TFRecord Dataset...')
+    tf.print('Started creating TFRecord Dataset...')
 
     writer = tf.io.TFRecordWriter(tfrecord_path)
 
@@ -19,11 +19,10 @@ def create_tfrecord_from_sequence(sequence, tfrecord_path):
         example = tf.train.Example(features=tf.train.Features(feature=feature))
         writer.write(example.SerializeToString())
         if index % 1000 == 0:
-            print(str(index) + '/' + str(len(sequence)))
+            tf.print(str(index) + '/' + str(len(sequence)))
 
-    print(str(len(sequence)) + '/' + str(len(sequence)))
-
-    print('Finished: TFRecord created at', tfrecord_path)
+    tf.print(str(len(sequence)) + '/' + str(len(sequence)))
+    tf.print('Finished: TFRecord created at', tfrecord_path)
 
 
 def read_tfrecord(single_record):
