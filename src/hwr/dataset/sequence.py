@@ -75,7 +75,7 @@ class TrainSequence(tf.keras.utils.Sequence):
     """
 
     def __init__(self, img_path, label_path, desired_size=(64, 1024), encode_labels=True,
-                 encode_max_seq_size=128, encode_char_set_path='./data/misc/char_set.json'):
+                 encode_max_seq_size=128, encode_char_set_path=None):
         """
         Setup necessary file paths and load csv data using pandas.
 
@@ -129,7 +129,7 @@ class TrainSequence(tf.keras.utils.Sequence):
         img = tf.constant(img, dtype=tf.float32)
         img = tf.expand_dims(img, 2)
 
-        transcription = self.df['transcription'][index]
+        transcription = str(self.df['transcription'][index])
 
         if self.encode_labels:
             label = self.encoder.str_to_idxs(transcription)
