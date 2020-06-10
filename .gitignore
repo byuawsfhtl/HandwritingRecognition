@@ -4,3 +4,4 @@
 data/*
 *.tfrecords
 */test_images/*
+*.sh
