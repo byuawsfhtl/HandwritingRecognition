@@ -4,6 +4,7 @@ from tqdm import tqdm
 
 from src.hwr.model.model import Recognizer
 from src.hwr.util.encoder import Encoder
+from src.hwr.util.metrics import CharacterErrorRate, WordErrorRate
 
 
 class ModelTrainer:
@@ -151,7 +152,42 @@ class ModelTrainer:
                     val_loop.update(1)
                 val_loop.close()
 
+                train_losses.append(self.train_loss.result().numpy())
+                val_losses.append(self.val_loss.result().numpy())
+
         except Exception as e:
             print("Error: {0}".format(e))
         finally:
             return self.model, (train_losses, val_losses)
+
+
+class ModelMetrics:
+    """
+    ModelMetrics
+
+    Used to provide metrics for a trained model.
+    """
+    def __init__(self, model, dataset):
+        """
+        :param model: The trained model to be tested
+        :param dataset: The dataset likely in tf.data.dataset or Keras Sequence format
+        """
+        self.model = model
+        self.dataset = dataset
+        self.encoder = Encoder()
+
+        self.cer = CharacterErrorRate()
+        self.wer = WordErrorRate()
+
+    def get_error_rates(self):
+        for images, labels in self.dataset:
+            predictions = self.model(images)
+            predictions = tf.argmax(predictions, axis=2)  # Best Path
+
+            str_predictions = self.encoder.idxs_to_str_batch(predictions)
+            str_labels = self.encoder.idxs_to_str_batch(labels, remove_duplicates=False)
+
+            self.cer(str_labels, str_predictions)
+            self.wer(str_labels, str_predictions)
+
+        return self.cer.result().numpy(), self.wer.result().numpy()

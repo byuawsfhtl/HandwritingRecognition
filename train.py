@@ -9,7 +9,7 @@ import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
 from src.hwr.dataset.sequence import TrainSequence # noqa
 from src.hwr.util.arguments import parse_train_arguments # noqa
 from src.hwr.dataset.tfrecord import create_tfrecord_from_sequence, read_tfrecord # noqa
-from src.hwr.model.training import ModelTrainer # noqa
+from src.hwr.model.training import ModelTrainer, ModelMetrics # noqa
 
 
 def show_loss_graph(train_losses, val_losses):
@@ -40,8 +40,8 @@ def train_model(args):
     Command Line Arguments:
     * img_path (required): The path to the images in the dataset
     * label_path (required): The path to the label CSV (Format: Word | Transcription - Tab-Delimited, No-Header)
-    * show_graphs (optional): Whether or not to show graphs of metrics after training (default: don't show graphs)
-    * log-level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
+    * show_graphs (optional): Whether or not to show graphs of the loss after training (default: False)
+    * metrics (optional): Whether or not to include metrics other than loss on the validation set (default: False)
     * model_out (optional): The path to store the model weights (default: ./data/model_weights/hwr_model/run1)
     * epochs (optional): The number of epochs to train (default: 100)
     * batch_size (optional): The number of images in a mini-batch (default: 100)
@@ -50,6 +50,7 @@ def train_model(args):
     * train_size (optional): The ratio used to determine the size of the train/validation sets (default: 0.8)
     * tfrecord_out (optional): The path to the created tfrecords file (default: './data/misc/data.tfrecords)
     * weights_path (optional): The path to pre-trained model weights (default: None)
+    * log-level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
 
     :param args: command line arguments
     """
@@ -88,6 +89,16 @@ def train_model(args):
 
     # Save the model weights to the specified path
     model.save_weights(arg_dict['model_out'])
+
+    # Print the losses over the course of training
+    print('Train Losses:', losses[0])
+    print('Val Losses:', losses[1])
+
+    if arg_dict['metrics']:
+        model_metrics = ModelMetrics(model, val_dataset)
+        cer, wer = model_metrics.get_error_rates()
+        print('Character Error Rate:', cer)
+        print('Word Error Rate:', wer)
 
     # Print loss graph if command line argument specified it
     if arg_dict['show_graphs']:

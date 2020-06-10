@@ -92,6 +92,8 @@ def parse_train_arguments(args):
         elif args[index] == '--weights_path':
             index += 1
             arg_dict['weights_path'] = args[index]
+        elif args[index] == '--metrics':
+            arg_dict['metrics'] = True
         else:
             raise Exception('Unexpected command line argument:' + args[index])
 
@@ -124,5 +126,7 @@ def parse_train_arguments(args):
         arg_dict['tfrecord_out'] = './data/misc/data.tfrecords'
     if 'weights_path' not in arg_dict:
         arg_dict['weights_path'] = None
+    if 'metrics' not in arg_dict:
+        arg_dict['metrics'] = False
 
     return arg_dict
