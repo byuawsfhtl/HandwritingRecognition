@@ -5,7 +5,7 @@ def create_tfrecord_from_sequence(sequence, tfrecord_path):
     """
     Create a TfRecord dataset from a sequence
 
-    :param sequence: The Keras sequence to load dataasdfs of arbitrary format
+    :param sequence: The Keras sequence to load data of arbitrary format
     :param tfrecord_path: Filepath and name for location of TfRecord dataset
     """
     print('Started creating TFRecord Dataset...')
