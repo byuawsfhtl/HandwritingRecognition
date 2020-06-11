@@ -35,17 +35,20 @@ conda install -c byu-handwriting-lab hwr
 Code can then be accessed like any normal python package. For example, to use the un-trained recognition model,
 you could simply:
 
-`
+```
 from hwr.model.model import Recognizer
 from hwr.util.encoder import Encoder
 import tensorflow as tf
 import numpy as np
+
 model = Recognizer()
+
 inp = tf.constant(np.random.randn(1, 1024, 64, 1), dtype=tf.float32)
 out = model(inp)
+
 prediction = encoder.idxs_to_str_batch(tf.argmax(out, axis=2))
 print('Prediction:', prediction)
-`
+```
 
 ### Manual Usage
 
