@@ -15,6 +15,7 @@ class ModelTrainer:
     It's easier to place all of the training code into an object so we don't run into issues.
     Once the object is created, the __call__ method will train and return the results and the trained model.
     """
+
     def __init__(self, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
                  lr=4e-4, char_set_path=None, max_seq_size=128, weights_path=None):
         """
@@ -38,7 +39,7 @@ class ModelTrainer:
         self.val_dataset_size = val_dataset_size
 
         self.model = Recognizer()
-        if weights_path is not None: # Load the model weights before training - useful for fine-tuning
+        if weights_path is not None:  # Load the model weights before training - useful for fine-tuning
             self.model.load_weights(weights_path)
 
         self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr)
@@ -167,6 +168,7 @@ class ModelMetrics:
 
     Used to provide metrics for a trained model.
     """
+
     def __init__(self, model, dataset):
         """
         :param model: The trained model to be tested
