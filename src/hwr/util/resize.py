@@ -10,6 +10,11 @@ def resize_img(img, desired_size):
     :param desired_size: Tuple representing the shape of the image after resize
     :return: The image resized
     """
+    # This needs to be figured out.... If we are given an image that is vertical, do we rotate it?
+    # Should this even be something that the Handwriting Recognizer handles?
+    if img.size[1] > img.size[0]:
+        img = img.rotate(angle=90, expand=True)
+
     current_size = np.array(img).shape
 
     img_ratio = current_size[0] / current_size[1]
