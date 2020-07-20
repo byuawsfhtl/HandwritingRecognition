@@ -8,10 +8,11 @@ from tqdm import tqdm
 # Comment out this line if you are running into issues running TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from src.hwr.model.model import Recognizer # noqa
-from src.hwr.dataset.sequence import InferenceSequence # noqa
-from src.hwr.util.encoder import Encoder # noqa
-from src.hwr.util.arguments import parse_inference_arguments # noqa
+from hwr import Recognizer # noqa
+from hwr.dataset.sequence import InferenceSequence # noqa
+from hwr import Encoder # noqa
+from hwr import parse_inference_arguments # noqa
+
 
 
 def inference(args):

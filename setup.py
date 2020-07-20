@@ -15,7 +15,6 @@ setup(
     url='https://github.com/BYU-Handwriting-Lab/HandwritingRecognition',
     author='BYU-Handwriting-Lab',
     keywords='BYU handwriting recognition',
-    package_dir={'': 'src'},
-    packages=find_packages(where='src'),
+    packages=find_packages(),
     install_requires=['tensorflow', 'pandas', 'pillow', 'matplotlib', 'numpy', 'editdistance', 'tqdm']
 )

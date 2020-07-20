@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 # Comment out this line if you are running into issues running TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from src.hwr.dataset.sequence import TrainSequence # noqa
-from src.hwr.util.arguments import parse_train_arguments # noqa
-from src.hwr.dataset.tfrecord import create_tfrecord_from_sequence, read_tfrecord # noqa
-from src.hwr.model.training import ModelTrainer, ModelMetrics # noqa
+from hwr.dataset.sequence import TrainSequence # noqa
+from hwr import parse_train_arguments # noqa
+from hwr import create_tfrecord_from_sequence, read_tfrecord # noqa
+from hwr.model.training import ModelTrainer, ModelMetrics # noqa
 
 
 def show_loss_graph(train_losses, val_losses):

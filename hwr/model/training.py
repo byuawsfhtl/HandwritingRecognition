@@ -2,9 +2,9 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from src.hwr.model.model import Recognizer
-from src.hwr.util.encoder import Encoder
-from src.hwr.util.metrics import CharacterErrorRate, WordErrorRate
+from hwr.model.model import Recognizer
+from hwr.util.encoder import Encoder
+from hwr.util.metrics import CharacterErrorRate, WordErrorRate
 
 
 class ModelTrainer:
