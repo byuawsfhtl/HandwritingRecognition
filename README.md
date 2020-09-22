@@ -4,6 +4,9 @@ This project contains code necessary to perform handwriting recognition
 in TensorFlow 2. Using the provided scripts, the model can be trained and
 also used for inference.
 
+This project can be used by cloning the repository and running manually. However, it is also available in
+[Anaconda Cloud](https://anaconda.org/BYU-Handwriting-Lab/hwr) and can be used in any Conda environment.
+
 ## Dependencies
 * TensorFlow 2.x
 * Python 3.x
@@ -14,23 +17,19 @@ also used for inference.
 
 A .yaml files has been included that specifies the necessary dependencies. A conda environment can be
 created and activated by running the following commands:
-`
+
+```
 conda env create -f environment.yaml
 conda activate hwr_env
-`
-
-## Usage
-
-This project can be used by cloning and repository and running manually. However, it is also available in
-[Anaconda Cloud](https://anaconda.org/BYU-Handwriting-Lab/hwr) and can be used in any Conda environment.
+```
 
 ### Conda Usage
 
 Potentially, the easiest way to access the code is to import the [conda package](https://anaconda.org/byu-handwriting-lab/hwr)
 
-`
+```
 conda install -c byu-handwriting-lab hwr
-`
+```
 
 Code can then be accessed like any normal python package. For example, to use the un-trained recognition model,
 you could simply:
@@ -50,9 +49,11 @@ prediction = encoder.idxs_to_str_batch(tf.argmax(out, axis=2))
 print('Prediction:', prediction)
 ```
 
-### Manual Usage
+## Manual Usage
 
 Using the actual codebase, you have access to the ```train.py``` and ```inference.py``` scripts.
+
+### Training
 
 Training can be run with the following command
 
@@ -84,6 +85,7 @@ Configuration File Arguments:
 * show_graphs: Whether or not to show graphs of the loss after training
 * metrics: Whether or not to include metrics other than loss on the validation set
 
+### Inference
 
 Inference can be run using the following command:
 
@@ -109,20 +111,20 @@ Packaging python packages is done through the use of ```setup.py```  as well as 
 to these files may need to take place if dependencies to the code base change. The project can be packaged using the
 following ```conda-build``` command.
 
-`
+```
 conda-build ./conda.recipe -c defaults -c conda-forge
-`
+```
 
 For the command to work, you may need to first activate the conda environment containing all of the project dependencies.
 
-`
+```
 conda env create -f environment.yaml
 conda activate hwr_env
-`
+```
 
 Once the project has been packaged, the packaged file can be uploaded to Anaconda Cloud (Anaconda-Client is required):
 
-`
+```
 anaconda upload -u BYU-Handwriting-Lab <FILENAME>
-`
+```
 
