@@ -71,7 +71,7 @@ def train_model(args):
     # Create train/validation datasets depending on configuration settings
     # Split the train dataset based on the TRAIN_SIZE parameter
     if configs[SPLIT_TRAIN]:
-        dataset_size = 200 #ds.get_dataset_size(configs[TRAIN_CSV_PATH])
+        dataset_size = 200  # ds.get_dataset_size(configs[TRAIN_CSV_PATH])
         train_dataset_size = int(configs[TRAIN_SIZE] * dataset_size)
         val_dataset_size = dataset_size - train_dataset_size
 

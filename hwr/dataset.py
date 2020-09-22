@@ -139,7 +139,7 @@ def str_to_idxs(string, char2idx, sequence_size):
     :param sequence_size: The final sequence length
     :return: The converted string now in its integer representation
     """
-    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.bytes_split(string), fn_output_signature=tf.int64)
+    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.bytes_split(string), dtype=tf.int64)
     return pad_or_truncate(idxs, sequence_size=sequence_size)
 
 
@@ -158,7 +158,7 @@ def idxs_to_str(idxs, idx2char, merge_repeated=True):
     if merge_repeated:
         idxs = merge_repeating_values(idxs)
 
-    string = tf.map_fn(lambda idx: idx2char.lookup(idx), idxs, fn_output_signature=tf.string)
+    string = tf.map_fn(lambda idx: idx2char.lookup(idx), idxs, dtype=tf.string)
     string = tf.strings.reduce_join(string)
     return tf.strings.strip(string)
 
@@ -175,7 +175,7 @@ def str_to_idxs_batch(batch, char2idx, sequence_size=128):
     :return: The converted strings now in its integer representation
     """
     return tf.map_fn(lambda string: str_to_idxs(string, char2idx, sequence_size=sequence_size), batch,
-                     fn_output_signature=tf.int64)
+                     dtype=tf.int64)
 
 
 def idxs_to_str_batch(batch, idx2char, merge_repeated=True):
@@ -190,7 +190,7 @@ def idxs_to_str_batch(batch, idx2char, merge_repeated=True):
     :return: The converted idxs now in its string representation
     """
     return tf.map_fn(lambda idxs: idxs_to_str(idxs, idx2char, merge_repeated=merge_repeated), batch,
-                     fn_output_signature=tf.string)
+                     dtype=tf.string)
 
 
 def read_and_encode_image(img_path, img_size=(64, 1024)):
