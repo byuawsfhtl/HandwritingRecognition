@@ -113,8 +113,6 @@ class CharacterErrorRate(tf.keras.metrics.Metric):
             self.count.assign_add(len(y_true))
         # Single String Version
         else:
-            print('Single')
-            tf.print('Single')
             self.total_error.assign_add(CharacterErrorRate.cer(y_true, y_pred))
             self.count.assign_add(1)
 

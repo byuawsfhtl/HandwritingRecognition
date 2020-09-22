@@ -209,8 +209,6 @@ class ModelMetrics:
             output = model_inference(self.model, images)
             predictions = tf.argmax(output, axis=2)  # Best Path
 
-            print(predictions)
-
             str_predictions = ds.idxs_to_str_batch(predictions, self.idx2char, merge_repeated=True)
             str_labels = ds.idxs_to_str_batch(labels, self.idx2char, merge_repeated=False)
 

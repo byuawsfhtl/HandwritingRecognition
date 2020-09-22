@@ -209,7 +209,7 @@ def read_and_encode_image(img_path, img_size=(64, 1024)):
     img = tf.image.decode_image(img_bytes, dtype=tf.float32)
     img = tf.image.per_image_standardization(img)
     img = tf.image.resize_with_pad(img, img_size[0], img_size[1])
-    img = tf.expand_dims(tf.transpose(tf.squeeze(img)), 2)  # Transpose with channels last
+    img = tf.transpose(img, perm=[1, 0, 2])  # Transpose with channels last
 
     return img
 
