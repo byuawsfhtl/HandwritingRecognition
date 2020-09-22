@@ -30,7 +30,6 @@ class FullGatedConv2D(kl.Conv2D):
         output = super(FullGatedConv2D, self).call(inputs)
         linear = kl.Activation("linear")(output[:, :, :, :self.nb_filters])
         sigmoid = kl.Activation("sigmoid")(output[:, :, :, self.nb_filters:])
-
         return kl.Multiply()([linear, sigmoid])
 
     def compute_output_shape(self, input_shape):
@@ -54,7 +53,6 @@ class Recognizer(tf.keras.Model):
     - https://ieeexplore-ieee-org.erl.lib.byu.edu/document/8270042
     - http://www.jpuigcerver.net/pubs/jpuigcerver_icdar2017.pdf
     """
-
     def __init__(self, vocabulary_size=197):
         """
         Define the model in terms of Keras layers

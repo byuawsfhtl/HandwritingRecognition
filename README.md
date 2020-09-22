@@ -56,39 +56,51 @@ Using the actual codebase, you have access to the ```train.py``` and ```inferenc
 
 Training can be run with the following command
 
-`python train.py --img_path ./data/training/images --label_path ./data/training/labels.csv`
+```
+python train.py <TRAIN_CONFIG_FILE>
+```
 
-Optionally, a number of command line arguments can be used to alter training behavior.
-The full list of parameters include:
-* img_path (required): The path to the images in the dataset
-* label_path (required): The path to the label CSV (Format: Word | Transcription - Tab-Delimited, No-Header)
-* show_graphs (optional): Whether or not to show graphs of metrics after training (default: don't show graphs)
-* log-level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
-* model_out (optional): The path to store the model weights (default: ./data/model_weights/hwr_model/run1)
-* epochs (optional): The number of epochs to train (default: 100)
-* batch_size (optional): The number of images in a mini-batch (default: 100)
-* learning_rate (optional): The learning rate the optimizer uses during training (default: 4e-4)
-* max_seq_size (optional): The max number of characters in a line-level transcription (default: 128)
-* train_size (optional): The ratio used to determine the size of the train/validation sets (default: 0.8)
-* tfrecord_out (optional): The path to the created tfrecords file (default: './data/misc/data.tfrecords)
-* weights_path (optional): The path to pre-trained model weights (default: None)
+Command Line Arguments:
+* TRAIN_CONFIG_FILE (required): The path to the train configuration file. A train configuration file
+  is provided as "train_config.yaml".
 
-Inference can be run with the following command
+The train configuration file contains all the settings needed to run handwriting recognition. To run recognition on
+your own model, simply modify the configuration file arguments. Explanations of the arguments are given below:
 
-`python inference.py --img_path ./data/test_images --out_path ./`
+Configuration File Arguments:
+* csv_path: The path to a tab-delimited CSV file containing | IMG_PATH | TRANSCRIPTION |
+            * Note that the IMG_PATH is relative to the location of the CSV
+* model_out: The path to store the trained model weights after training
+* model_in: The path to pre-trained model weights to be loaded before training begins
+* epochs: The number of epochs to train
+* batch_size: The number of images in a mini-batch
+* learning_rate: The learning rate the optimizer uses during training
+* max_seq_size: The max number of characters in a line-level transcription
+* img_size: The size which all images will be resized for training
+* split_train: Whether or not to split the training set into a train/validation using the train_size parameter.
+               Train = train_size, Val = (1 - train_size)
+* train_size: The ratio used to determine the size of the train/validation split.
+              Used ONLY if split_train is set to True
+* show_graphs: Whether or not to show graphs of the loss after training
+* metrics: Whether or not to include metrics other than loss on the validation set
 
-Optionally, inference can be printed to the console instead
-of an output file. A plot with the image will also be shown.
-To continue on to the next image, simply close the image window.
 
-`python inference.py --img_path ./data/test_images --console`
+Inference can be run using the following command:
 
-The full list of inference arguments include:
-* img_path (required): The path to images to be inferred
-* out_path (required if console not specified): The output path to the results of the inference
-* weights_path (required: The path to the pre-trained model weights
-* console (optional): Print inference results to the console and show images
-* log_level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
+```
+python inference.py <INFERENCE_CONFIG_FILE>
+```
+
+Command Line Arguments:
+* INFERENCE_CONFIG_FILE (required): The path to the inference configuration file. An inference configuration
+  file is provided as "inference_config.yaml".
+
+Configuration File Arguments:
+* img_path: The path to the images to be inferred
+* out_path: The output path to the results of the inference
+* model_in: The path to the pre-trained model weights to be used during inference
+* img_size: The size which all images will be resized/padded for inference on the model
+* batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
 
 
 ### Build the Conda Package to be uploaded to Anaconda Cloud

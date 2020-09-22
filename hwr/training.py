@@ -2,9 +2,11 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from hwr.model.model import Recognizer
-from hwr.util.encoder import Encoder
-from hwr.util.metrics import CharacterErrorRate, WordErrorRate
+from hwr.model import Recognizer
+from hwr.metrics import CharacterErrorRate, WordErrorRate
+from hwr.util import model_inference
+
+import hwr.dataset as ds
 
 
 class ModelTrainer:
@@ -17,7 +19,7 @@ class ModelTrainer:
     """
 
     def __init__(self, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
-                 lr=4e-4, char_set_path=None, max_seq_size=128, weights_path=None):
+                 lr=4e-4, max_seq_size=128, model_in=None):
         """
         Set up necessary variables that will be used during training, including the model, optimizer,
         encoder, and other metrics.
@@ -30,6 +32,7 @@ class ModelTrainer:
         :param val_dataset_size: The number of images in the validation set
         :param lr: The learning rate of the model
         :param max_seq_size: The maximum length of a line-level transcription (See Encoder for context)
+        :param model_in: The path to the weights of a pre-trained model that will be applied to the model prior to train
         """
         self.epochs = epochs
         self.batch_size = batch_size
@@ -39,11 +42,10 @@ class ModelTrainer:
         self.val_dataset_size = val_dataset_size
 
         self.model = Recognizer()
-        if weights_path is not None:  # Load the model weights before training - useful for fine-tuning
-            self.model.load_weights(weights_path)
+        if model_in is not None:  # Load the model weights before training - useful for fine-tuning
+            self.model.load_weights(model_in)
 
-        self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr)
-        self.encoder = Encoder(char_set_path=char_set_path, max_sequence_size=max_seq_size)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
 
         self.max_seq_size = max_seq_size
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -115,7 +117,7 @@ class ModelTrainer:
         loss = tf.reduce_mean(loss)
         self.val_loss(loss)
 
-    def __call__(self):
+    def train(self):
         """
         Main training loop. The method will training for the specified number of epochs and
         will iterate through the training and validation sets each epoch. The training and
@@ -161,6 +163,14 @@ class ModelTrainer:
         finally:
             return self.model, (train_losses, val_losses)
 
+    def __call__(self):
+        """
+        Calls self.train() method which contains main training loop.
+
+        :return: The model and train/val losses as tuple
+        """
+        return self.train()
+
 
 class ModelMetrics:
     """
@@ -169,27 +179,29 @@ class ModelMetrics:
     Used to provide metrics for a trained model.
     """
 
-    def __init__(self, model, dataset):
+    def __init__(self, model, dataset, idx2char):
         """
         :param model: The trained model to be tested
         :param dataset: The dataset likely in tf.data.dataset or Keras Sequence format
         """
         self.model = model
         self.dataset = dataset
-        self.encoder = Encoder()
+        self.idx2char = idx2char
 
         self.cer = CharacterErrorRate()
         self.wer = WordErrorRate()
 
     def get_error_rates(self):
         for images, labels in self.dataset:
-            predictions = self.model(images)
-            predictions = tf.argmax(predictions, axis=2)  # Best Path
+            output = model_inference(self.model, images)
+            predictions = tf.argmax(output, axis=2)  # Best Path
 
-            str_predictions = self.encoder.idxs_to_str_batch(predictions)
-            str_labels = self.encoder.idxs_to_str_batch(labels, remove_duplicates=False)
+            print(predictions)
 
-            self.cer(str_labels, str_predictions)
-            self.wer(str_labels, str_predictions)
+            str_predictions = ds.idxs_to_str_batch(predictions, self.idx2char, merge_repeated=True)
+            str_labels = ds.idxs_to_str_batch(labels, self.idx2char, merge_repeated=False)
+
+            self.cer(str_labels.numpy().astype(str), str_predictions.numpy().astype(str))
+            self.wer(str_labels.numpy().astype(str), str_predictions.numpy().astype(str))
 
         return self.cer.result().numpy(), self.wer.result().numpy()

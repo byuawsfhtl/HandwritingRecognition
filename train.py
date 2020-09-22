@@ -1,15 +1,120 @@
 import sys
-import os
-import matplotlib.pyplot as plt
 
-# Don't print any logs when booting up TensorFlow
-# Comment out this line if you are running into issues running TensorFlow
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from hwr.dataset.sequence import TrainSequence # noqa
-from hwr import parse_train_arguments # noqa
-from hwr import create_tfrecord_from_sequence, read_tfrecord # noqa
-from hwr.model.training import ModelTrainer, ModelMetrics # noqa
+import matplotlib.pyplot as plt
+import yaml
+import tensorflow as tf
+
+import hwr.dataset as ds
+from hwr.training import ModelTrainer
+from hwr.training import ModelMetrics
+
+TRAIN_CSV_PATH = 'train_csv_path'
+VAL_CSV_PATH = 'val_csv_path'
+SPLIT_TRAIN = 'split_train'
+TRAIN_SIZE = 'train_size'
+MODEL_OUT = 'model_out'
+MODEL_IN = 'model_in'
+EPOCHS = 'epochs'
+BATCH_SIZE = 'batch_size'
+LEARNING_RATE = 'learning_rate'
+MAX_SEQ_SIZE = 'max_seq_size'
+IMG_SIZE = 'img_size'
+SHOW_GRAPHS = 'show_graphs'
+INCLUDE_METRICS = 'include_metrics'
+
+
+def train_model(args):
+    """
+    Train the model according to the images and labels specified
+
+    python train.py <TRAIN_CONFIG_FILE>
+
+    Command Line Arguments:
+    * TRAIN_CONFIG_FILE (required): The path to the train configuration file. A train configuration file
+      is provided as "train_config.yaml".
+
+    Configuration File Arguments:
+    * csv_path: The path to a tab-delimited CSV file containing | IMG_PATH | TRANSCRIPTION |
+                * Note that the IMG_PATH is relative to the location of the CSV
+    * model_out: The path to store the trained model weights after training
+    * model_in: The path to pre-trained model weights to be loaded before training begins
+    * epochs: The number of epochs to train
+    * batch_size: The number of images in a mini-batch
+    * learning_rate: The learning rate the optimizer uses during training
+    * max_seq_size: The max number of characters in a line-level transcription
+    * img_size: The size which all images will be resized for training
+    * split_train: Whether or not to split the training set into a train/validation using the train_size parameter.
+                   Train = train_size, Val = (1 - train_size)
+    * train_size: The ratio used to determine the size of the train/validation split.
+                  Used ONLY if split_train is set to True
+    * show_graphs: Whether or not to show graphs of the loss after training
+    * metrics: Whether or not to include metrics other than loss on the validation set
+
+    :param args: command line arguments
+    """
+    # Ensure the train config file is included
+    if len(args) == 0:
+        print('Must include path to train config file. The default file is included as "train_config.yaml.')
+        return
+
+    # Read arguments from the config file:
+    with open(args[0]) as f:
+        configs = yaml.load(f, Loader=yaml.FullLoader)
+
+    # Print available devices so we know if we are using CPU or GPU
+    tf.print('Devices Available:', tf.config.list_physical_devices())
+
+    char2idx = ds.get_char2idx()
+    idx2char = ds.get_idx2char()
+
+    # Create train/validation datasets depending on configuration settings
+    # Split the train dataset based on the TRAIN_SIZE parameter
+    if configs[SPLIT_TRAIN]:
+        dataset_size = 200 #ds.get_dataset_size(configs[TRAIN_CSV_PATH])
+        train_dataset_size = int(configs[TRAIN_SIZE] * dataset_size)
+        val_dataset_size = dataset_size - train_dataset_size
+
+        dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
+                                                  eval(configs[IMG_SIZE])).take(200)
+        train_dataset = dataset.take(train_dataset_size)\
+                               .shuffle(100, reshuffle_each_iteration=True)\
+                               .batch(configs[BATCH_SIZE])
+        val_dataset = dataset.skip(train_dataset_size)\
+                             .batch(configs[BATCH_SIZE])
+
+    else:  # Use the data as given in the train/validation csv files - no additional splits performed
+        train_dataset_size = ds.get_dataset_size(configs[TRAIN_CSV_PATH])
+        val_dataset_size = ds.get_dataset_size(configs[VAL_CSV_PATH])
+
+        train_dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
+                                                        eval(configs[IMG_SIZE]))\
+                          .shuffle(100, reshuffle_each_iteration=True)\
+                          .batch(configs[BATCH_SIZE])
+        val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
+                                                      eval(configs[IMG_SIZE])).batch(configs[BATCH_SIZE])
+
+    # Train the model
+    model_trainer = ModelTrainer(configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size,
+                                 val_dataset, val_dataset_size, lr=configs[LEARNING_RATE],
+                                 max_seq_size=configs[MAX_SEQ_SIZE], model_in=configs[MODEL_IN])
+    model, losses = model_trainer.train()
+
+    # Save the model weights to the specified path
+    model.save_weights(configs[MODEL_OUT])
+
+    # Print the losses over the course of training
+    print('Train Losses:', losses[0])
+    print('Val Losses:', losses[1])
+
+    if configs[INCLUDE_METRICS]:
+        model_metrics = ModelMetrics(model, val_dataset, idx2char)
+        cer, wer = model_metrics.get_error_rates()
+        print('Character Error Rate:', cer)
+        print('Word Error Rate:', wer)
+
+    # Print loss graph if command line argument specified it
+    if configs[SHOW_GRAPHS]:
+        show_loss_graph(losses[0], losses[1])
 
 
 def show_loss_graph(train_losses, val_losses):
@@ -26,87 +131,6 @@ def show_loss_graph(train_losses, val_losses):
     plt.plot(val_losses, label='Val')
     plt.legend()
     plt.show()
-
-
-def train_model(args):
-    """
-    Train the model according to the images and labels specified
-
-    python train.py --img_path <IMG_PATH> --label_path <CSV_LABEL_PATH> --show_graphs --log_level <LOG_LEVEL>
-                    --model_out <WEIGHTS_OUT_PATH> --epochs <NUM_EPOCHS> --batch_size <BATCH_SIZE>
-                    --learning_rate <LEARNING_RATE> --max_seq_size <MAX_SEQ_SIZE> --train_size <TRAIN_SET_SPLIT_SIZE>
-                    --tfrecord_out <TF_RECORD_OUT_PATH>
-
-    Command Line Arguments:
-    * img_path (required): The path to the images in the dataset
-    * label_path (required): The path to the label CSV (Format: Word | Transcription - Tab-Delimited, No-Header)
-    * show_graphs (optional): Whether or not to show graphs of the loss after training (default: False)
-    * metrics (optional): Whether or not to include metrics other than loss on the validation set (default: False)
-    * model_out (optional): The path to store the model weights (default: ./data/model_weights/hwr_model/run1)
-    * epochs (optional): The number of epochs to train (default: 100)
-    * batch_size (optional): The number of images in a mini-batch (default: 100)
-    * learning_rate (optional): The learning rate the optimizer uses during training (default: 4e-4)
-    * max_seq_size (optional): The max number of characters in a line-level transcription (default: 128)
-    * train_size (optional): The ratio used to determine the size of the train/validation sets (default: 0.8)
-    * tfrecord_out (optional): The path to the created tfrecords file (default: './data/misc/data.tfrecords)
-    * weights_path (optional): The path to pre-trained model weights (default: None)
-    * log-level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
-
-    :param args: command line arguments
-    """
-
-    # Print available devices so we know if we are uses CPU or GPU
-    tf.print('Devices Available:', tf.config.list_physical_devices())
-
-    # Place command line arguments in arg_dict
-    arg_dict = parse_train_arguments(args)
-
-    # Set up verbose logging if it was specified
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = arg_dict['log_level']
-
-    # We can import data into tensor format through a Keras Sequence
-    sequence = TrainSequence(arg_dict['img_path'], arg_dict['label_path'])
-
-    # Convert the data into TfRecord format which should be much faster
-    create_tfrecord_from_sequence(sequence, arg_dict['tfrecord_out'])
-
-    # Load a TensorFlow Dataset from the tfrecords file
-    dataset = tf.data.TFRecordDataset(arg_dict['tfrecord_out'])\
-        .map(read_tfrecord)\
-        .shuffle(buffer_size=1000, reshuffle_each_iteration=True)
-
-    # Split the dataset into a training and testing set
-    dataset_size = len(sequence)
-    train_dataset_size = int(arg_dict['train_size'] * dataset_size)
-    val_dataset_size = dataset_size - train_dataset_size
-
-    train_dataset = dataset.take(train_dataset_size).batch(arg_dict['batch_size'])
-    val_dataset = dataset.skip(train_dataset_size).batch(arg_dict['batch_size'])
-
-    # Create the train object and load in the configuration settings
-    train = ModelTrainer(arg_dict['epochs'], arg_dict['batch_size'], train_dataset, train_dataset_size,
-                         val_dataset, val_dataset_size, lr=arg_dict['learning_rate'],
-                         max_seq_size=arg_dict['max_seq_size'], weights_path=arg_dict['weights_path'])
-
-    # Train the model
-    model, losses = train()
-
-    # Save the model weights to the specified path
-    model.save_weights(arg_dict['model_out'])
-
-    # Print the losses over the course of training
-    print('Train Losses:', losses[0])
-    print('Val Losses:', losses[1])
-
-    if arg_dict['metrics']:
-        model_metrics = ModelMetrics(model, val_dataset)
-        cer, wer = model_metrics.get_error_rates()
-        print('Character Error Rate:', cer)
-        print('Word Error Rate:', wer)
-
-    # Print loss graph if command line argument specified it
-    if arg_dict['show_graphs']:
-        show_loss_graph(losses[0], losses[1])
 
 
 if __name__ == '__main__':

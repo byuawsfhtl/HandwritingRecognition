@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import editdistance as ed
 
 
@@ -31,7 +32,7 @@ class WordErrorRate(tf.keras.metrics.Metric):
         tf.assert_equal(type(y_true), type(y_pred), message='y_true and y_pred must be of the same type (list or str)')
 
         # Batch List Version
-        if type(y_true) == list:
+        if isinstance(y_true, np.ndarray) or isinstance(y_true, np.ndarray):
             tf.assert_equal(len(y_true), len(y_pred), message='y_true and y_pred must have the same number of elements')
 
             for y_true_single, y_pred_single in zip(y_true, y_pred):
@@ -101,15 +102,19 @@ class CharacterErrorRate(tf.keras.metrics.Metric):
         tf.assert_equal(type(y_true), type(y_pred), message='y_true and y_pred must be of the same type (list or str)')
 
         # Batch List Version
-        if type(y_true) == list:
+        if isinstance(y_true, list) or isinstance(y_true, np.ndarray):
             tf.assert_equal(len(y_true), len(y_pred), message='y_true and y_pred must have the same number of elements')
 
             for y_true_single, y_pred_single in zip(y_true, y_pred):
+                y_true_single = y_true_single.numpy() if tf.is_tensor(y_true) else y_true_single
+                y_pred_single = y_pred_single.numpy() if tf.is_tensor(y_true) else y_pred_single
                 self.total_error.assign_add(self.cer(y_true_single, y_pred_single))
 
             self.count.assign_add(len(y_true))
         # Single String Version
         else:
+            print('Single')
+            tf.print('Single')
             self.total_error.assign_add(CharacterErrorRate.cer(y_true, y_pred))
             self.count.assign_add(1)
 

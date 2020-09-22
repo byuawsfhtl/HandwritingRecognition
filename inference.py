@@ -1,71 +1,83 @@
 import sys
-import matplotlib.pyplot as plt
-import os
+
+import tensorflow as tf
 import pandas as pd
+import yaml
 from tqdm import tqdm
 
-# Don't print any logs when booting up TensorFlow
-# Comment out this line if you are running into issues running TensorFlow
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import tensorflow as tf # noqa - Suppress PyCharm Pep8 format warning
-from hwr import Recognizer # noqa
-from hwr.dataset.sequence import InferenceSequence # noqa
-from hwr import Encoder # noqa
-from hwr import parse_inference_arguments # noqa
+from hwr.model import Recognizer
+from hwr.util import model_inference
+import hwr.dataset as ds
 
+IMG_PATH = 'img_path'
+OUT_PATH = 'out_path'
+MODEL_IN = 'model_in'
+IMG_SIZE = 'img_size'
+BATCH_SIZE = 'batch_size'
+CONSOLE_OUT = 'console_out'
 
 
 def inference(args):
     """
     Perform inference on images specified by the user
 
-    python inference.py --img_path <IMG_PATH> --out_path <OUTPUT_PATH> --console
+    python inference.py <INFERENCE_CONFIG_FILE>
 
     Command Line Arguments:
-    * img_path (required): The path to images to be inferred
-    * out_path (required if console not specified): The output path to the results of the inference
-    * weights_path (required): The path to the pre-trained model weights
-    * console (optional): Print inference results to the console and show images (default: None)
-    * log_level (optional): TensorFlow log-level {0, 1, 2, 3} (default: 3)
+    * INFERENCE_CONFIG_FILE (required): The path to the inference configuration file. An inference configuration
+      file is provided as "inference_config.yaml".
+
+    Configuration File Arguments:
+    * img_path: The path to the images to be inferred
+    * out_path: The output path to the results of the inference
+    * model_in: The path to the pre-trained model weights to be used during inference
+    * img_size: The size which all images will be resized/padded for inference on the model
+    * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
 
     :param args: Command line arguments
     :return: None
     """
-    # Place command line arguments in arg_dict
-    arg_dict = parse_inference_arguments(args)
+    # Ensure the inference config file is included
+    if len(args) == 0:
+        print('Must include path to the inference config file. The default file is included as inference_config.yaml')
+        return
 
-    # Set up verbose logging if it was specified
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = arg_dict['log_level']
+    with open(args[0]) as f:
+        configs = yaml.load(f, Loader=yaml.FullLoader)
 
-    # Create the required objects for inference
-    sequence = InferenceSequence(arg_dict['img_path'])
-    encoder = Encoder()
+    # Print available devices so we know if we are using CPU or GPU
+    tf.print('Devices Available:', tf.config.list_physical_devices())
+
+    # Create the model object and load the pre-trained model weights
     model = Recognizer()
+    model.load_weights(configs[MODEL_IN])
 
-    # Load the pre-trained model weights
-    model.load_weights(arg_dict['weights_path'])
+    dataset = ds.get_encoded_inference_dataset_from_img_path(configs[IMG_PATH], eval(configs[IMG_SIZE]))\
+                .batch(configs[BATCH_SIZE])
+
+    # Get the standard character set mapping
+    idx2char = ds.get_idx2char()
 
     # Keep track of all inferences in list of tuples
     inferences = []
 
     # Iterate through each of the images and perform inference
-    for img, img_name in tqdm(sequence):
-        pred = model(img)
-        best_path_pred = tf.argmax(pred, axis=2)
-        str_pred = encoder.idxs_to_str_batch(best_path_pred)[0]
+    inference_loop = tqdm(total=dataset.cardinality().numpy(), position=0, leave=True)
+    for imgs, img_names in dataset:
+        output = model_inference(model, imgs)  # Without softmax
+        predictions = tf.argmax(output, 2)
+        str_predictions = ds.idxs_to_str_batch(predictions, idx2char)
 
-        if arg_dict['console']:
-            print(img_name + ":", str_pred)
-            plt.imshow(tf.transpose(tf.squeeze(img)), cmap='gray')
-            plt.show()
-        else:
-            inferences.append((img_name, str_pred))
+        for str_pred, img_name in zip(str_predictions.numpy(), img_names.numpy()):
+            inferences.append([str(str_pred, 'utf-8'), str(img_name, 'utf-8')])  # byte-string -> utf-8 string
+
+        inference_loop.update(1)
+    inference_loop.close()
 
     # Write to output CSV if we aren't printing to the console
-    if not arg_dict['console']:
-        df = pd.DataFrame(data=inferences)
-        df.to_csv(arg_dict['out_path'], sep='\t', index=False, header=False)
-        print('Output written to', arg_dict['out_path'])
+    df = pd.DataFrame(data=inferences)
+    df.to_csv(configs[OUT_PATH], sep='\t', index=False, header=False)
+    print('Output written to', configs[OUT_PATH])
 
 
 if __name__ == '__main__':

@@ -16,5 +16,5 @@ setup(
     author='BYU-Handwriting-Lab',
     keywords='BYU handwriting recognition',
     packages=find_packages(),
-    install_requires=['tensorflow', 'pandas', 'pillow', 'matplotlib', 'numpy', 'editdistance', 'tqdm']
+    install_requires=['tensorflow', 'pandas', 'matplotlib', 'pyyaml', 'numpy', 'editdistance', 'tqdm']
 )
