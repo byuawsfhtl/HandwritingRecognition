@@ -21,6 +21,7 @@ MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 SHOW_GRAPHS = 'show_graphs'
 INCLUDE_METRICS = 'include_metrics'
+SAVE_EVERY = 'save_every'
 
 
 def train_model(args):
@@ -94,13 +95,10 @@ def train_model(args):
                                                       eval(configs[IMG_SIZE])).batch(configs[BATCH_SIZE])
 
     # Train the model
-    model_trainer = ModelTrainer(configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size,
-                                 val_dataset, val_dataset_size, lr=configs[LEARNING_RATE],
-                                 max_seq_size=configs[MAX_SEQ_SIZE], model_in=configs[MODEL_IN])
+    model_trainer = ModelTrainer(configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size, val_dataset,
+                                 val_dataset_size, configs[MODEL_OUT], model_in=configs[MODEL_IN], lr=configs[LEARNING_RATE],
+                                 max_seq_size=configs[MAX_SEQ_SIZE], save_every=configs[SAVE_EVERY])
     model, losses = model_trainer.train()
-
-    # Save the model weights to the specified path
-    model.save_weights(configs[MODEL_OUT])
 
     # Print the losses over the course of training
     print('Train Losses:', losses[0])

@@ -19,7 +19,7 @@ class ModelTrainer:
     """
 
     def __init__(self, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
-                 lr=4e-4, max_seq_size=128, model_in=None):
+                 model_out, model_in=None, lr=4e-4, max_seq_size=128, save_every=5):
         """
         Set up necessary variables that will be used during training, including the model, optimizer,
         encoder, and other metrics.
@@ -30,9 +30,11 @@ class ModelTrainer:
         :param train_dataset_size: The number of images in the training set
         :param val_dataset: Validation Dataset that is mapped and batched (see train_model function for context)
         :param val_dataset_size: The number of images in the validation set
+        :param model_out: The path to the location where the weights will be stored during and after training
+        :param model_in: The path to the weights of a pre-trained model that will be applied to the model prior to train
         :param lr: The learning rate of the model
         :param max_seq_size: The maximum length of a line-level transcription (See Encoder for context)
-        :param model_in: The path to the weights of a pre-trained model that will be applied to the model prior to train
+        :param save_every: The frequency which the model weights will be saved during training
         """
         self.epochs = epochs
         self.batch_size = batch_size
@@ -40,6 +42,8 @@ class ModelTrainer:
         self.val_dataset = val_dataset
         self.train_dataset_size = train_dataset_size
         self.val_dataset_size = val_dataset_size
+        self.model_out = model_out
+        self.save_every = save_every
 
         self.model = Recognizer()
         if model_in is not None:  # Load the model weights before training - useful for fine-tuning
@@ -158,9 +162,18 @@ class ModelTrainer:
                 train_losses.append(self.train_loss.result().numpy())
                 val_losses.append(self.val_loss.result().numpy())
 
+                # Save the model weights to the specified path
+                if epoch % self.save_every == self.save_every - 1:
+                    print('Saving Model Weights to', self.model_out)
+                    self.model.save_weights(self.model_out)
+
         except Exception as e:
             print("Error: {0}".format(e))
         finally:
+            # Save the model weights one last time and return the model/losses
+            print('Finished Training')
+            print('Saving Model Weights to', self.model_out)
+            self.model.save_weights(self.model_out)
             return self.model, (train_losses, val_losses)
 
     def __call__(self):
