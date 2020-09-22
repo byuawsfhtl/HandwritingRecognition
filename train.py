@@ -71,12 +71,12 @@ def train_model(args):
     # Create train/validation datasets depending on configuration settings
     # Split the train dataset based on the TRAIN_SIZE parameter
     if configs[SPLIT_TRAIN]:
-        dataset_size = 200  # ds.get_dataset_size(configs[TRAIN_CSV_PATH])
+        dataset_size = 100  # ds.get_dataset_size(configs[TRAIN_CSV_PATH])
         train_dataset_size = int(configs[TRAIN_SIZE] * dataset_size)
         val_dataset_size = dataset_size - train_dataset_size
 
         dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
-                                                  eval(configs[IMG_SIZE])).take(200)
+                                                  eval(configs[IMG_SIZE])).take(100)
         train_dataset = dataset.take(train_dataset_size)\
                                .shuffle(100, reshuffle_each_iteration=True)\
                                .batch(configs[BATCH_SIZE])
@@ -107,8 +107,8 @@ def train_model(args):
     if configs[INCLUDE_METRICS]:
         model_metrics = ModelMetrics(model, val_dataset, idx2char)
         cer, wer = model_metrics.get_error_rates()
-        print('Character Error Rate:', cer)
-        print('Word Error Rate:', wer)
+        print('Character Error Rate: {:.2f}%'.format(cer * 100))
+        print('Word Error Rate: {:.2f}%'.format(wer * 100))
 
     # Print loss graph if command line argument specified it
     if configs[SHOW_GRAPHS]:

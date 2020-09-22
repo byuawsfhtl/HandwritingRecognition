@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 from hwr.model import Recognizer
-from hwr.metrics import CharacterErrorRate, WordErrorRate
+from hwr.metrics import ErrorRates
 from hwr.util import model_inference
 
 import hwr.dataset as ds
@@ -201,10 +201,9 @@ class ModelMetrics:
         self.dataset = dataset
         self.idx2char = idx2char
 
-        self.cer = CharacterErrorRate()
-        self.wer = WordErrorRate()
-
     def get_error_rates(self):
+        all_inferences = []
+        all_labels = []
         for images, labels in self.dataset:
             output = model_inference(self.model, images)
             predictions = tf.argmax(output, axis=2)  # Best Path
@@ -212,7 +211,14 @@ class ModelMetrics:
             str_predictions = ds.idxs_to_str_batch(predictions, self.idx2char, merge_repeated=True)
             str_labels = ds.idxs_to_str_batch(labels, self.idx2char, merge_repeated=False)
 
-            self.cer(str_labels.numpy().astype(str), str_predictions.numpy().astype(str))
-            self.wer(str_labels.numpy().astype(str), str_predictions.numpy().astype(str))
+            all_inferences.extend(str_predictions.numpy().astype(str).tolist())
+            all_labels.extend(str_labels.numpy().astype(str).tolist())
 
-        return self.cer.result().numpy(), self.wer.result().numpy()
+        # Map all inferences/labels to update the error rates
+        rates = ErrorRates()
+
+        for y_true, y_pred in zip(all_labels, all_inferences):
+            rates.update(y_true, y_pred)
+            rates.update(y_true, y_pred)
+
+        return rates.get_error_rates()
