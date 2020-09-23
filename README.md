@@ -1,4 +1,4 @@
-# Line-Level Handwriting Recognition in TensorFlow 2
+# Line-Level Handwriting Recognition
 
 This project contains code necessary to perform handwriting recognition
 in TensorFlow 2. Using the provided scripts, the model can be trained and
