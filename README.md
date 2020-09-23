@@ -119,7 +119,7 @@ Configuration File Arguments:
 * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
 
 
-### Build the Conda Package to be uploaded to Anaconda Cloud
+## Build the Conda Package to be uploaded to Anaconda Cloud
 
 Packaging python packages is done through the use of ```setup.py```  as well as ```meta.yaml```. Slight modifications
 to these files may need to take place if dependencies to the code base change. The project can be packaged using the
