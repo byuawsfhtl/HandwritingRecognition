@@ -12,8 +12,8 @@ This project can be used by cloning the repository and running manually. However
 * Python 3.x
 * Numpy
 * Pandas
-* Pillow
 * Matplotlib
+* EditDistance
 
 A .yaml files has been included that specifies the necessary dependencies. A conda environment can be
 created and activated by running the following commands:
