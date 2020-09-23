@@ -83,8 +83,8 @@ The train configuration file contains all the settings needed to run handwriting
 your own model, simply modify the configuration file arguments. Explanations of the arguments are given below:
 
 Configuration File Arguments:
-* csv_path: The path to a tab-delimited CSV file containing | IMG_PATH | TRANSCRIPTION |
-            * Note that the IMG_PATH given in the CSV is relative to the location of the CSV
+* csv_path: The path to a tab-delimited CSV file containing | IMG_PATH | TRANSCRIPTION | 
+  (Note that the IMG_PATH given in the CSV is relative to the location of the CSV)
 * model_out: The path to store the trained model weights after training
 * model_in: The path to pre-trained model weights to be loaded before training begins
 * epochs: The number of epochs to train
