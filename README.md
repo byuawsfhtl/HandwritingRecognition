@@ -15,7 +15,7 @@ This project can be used by cloning the repository and running manually. However
 * Matplotlib
 * EditDistance
 
-A .yaml files has been included that specifies the necessary dependencies. A conda environment can be
+A .yaml file has been included that specifies the necessary dependencies. A conda environment can be
 created and activated by running the following commands:
 
 ```
@@ -31,7 +31,7 @@ Potentially, the easiest way to access the code is to import the [conda package]
 conda install -c byu-handwriting-lab hwr
 ```
 
-Code can then be accessed like any normal python package. For example, to use the un-trained recognition model,
+Code can then be accessed like any normal python package. For example, to use the recognition model,
 you could write something like this:
 
 ```
@@ -84,7 +84,7 @@ your own model, simply modify the configuration file arguments. Explanations of 
 
 Configuration File Arguments:
 * csv_path: The path to a tab-delimited CSV file containing | IMG_PATH | TRANSCRIPTION |
-            * Note that the IMG_PATH is relative to the location of the CSV
+            * Note that the IMG_PATH given in the CSV is relative to the location of the CSV
 * model_out: The path to store the trained model weights after training
 * model_in: The path to pre-trained model weights to be loaded before training begins
 * epochs: The number of epochs to train
