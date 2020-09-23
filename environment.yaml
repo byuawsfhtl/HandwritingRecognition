@@ -5,6 +5,7 @@ channels:
 - conda-forge
 dependencies:
 - python=3.7.3
+- anaconda::numpy=1.19.1
 - anaconda::tensorflow-gpu=2.1.0
 - anaconda::pyyaml=5.3.1
 - anaconda::pandas=1.0.3

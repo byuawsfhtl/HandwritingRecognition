@@ -32,21 +32,35 @@ conda install -c byu-handwriting-lab hwr
 ```
 
 Code can then be accessed like any normal python package. For example, to use the un-trained recognition model,
-you could simply:
+you could write something like this:
 
 ```
-from hwr.model.model import Recognizer
-from hwr.util.encoder import Encoder
+from hwr.model import Recognizer
+import hwr.dataset as ds
+
 import tensorflow as tf
 import numpy as np
 
 model = Recognizer()
 
-inp = tf.constant(np.random.randn(1, 1024, 64, 1), dtype=tf.float32)
-out = model(inp)
+# Load some pretrained weights
+model_weights_path = './some/path/to/model/weights'
+model.load_weights(model_weights_path)
 
-prediction = encoder.idxs_to_str_batch(tf.argmax(out, axis=2))
-print('Prediction:', prediction)
+# The mapping between integers and characters
+idx2char = ds.get_idx2char()
+
+# Simulate creating an image with random numbers
+fake_image = tf.constant(np.random.randn(1, 1024, 64, 1), dtype=tf.float32)
+
+# Run the image through the recognition model
+prob_dist = model(fake_image)
+predictions = tf.argmax(prob_dist, axis=2)
+
+# Convert to the character representation
+str_predictions = ds.idxs_to_str_batch(predictions, idx2char)
+
+print('Prediction:', str_predictions)
 ```
 
 ## Manual Usage
@@ -122,7 +136,8 @@ conda env create -f environment.yaml
 conda activate hwr_env
 ```
 
-Once the project has been packaged, the packaged file can be uploaded to Anaconda Cloud (Anaconda-Client is required):
+Once the project has been packaged, the packaged file can be uploaded to Anaconda Cloud (Anaconda-Client is required
+-- Linux-Only):
 
 ```
 anaconda upload -u BYU-Handwriting-Lab <FILENAME>
