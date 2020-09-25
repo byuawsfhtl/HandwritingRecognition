@@ -103,9 +103,10 @@ Inference Example:
 python inference.py inference_config.yaml
 ```
 
-## Usage With Conda
+## Usage With Conda Package
 
 Potentially, the easiest way to access the code is to import the [conda package](https://anaconda.org/byu-handwriting-lab/hwr)
+that is available on Anaconda-Cloud. No cloning of this repository is necessary.
 
 ```
 conda install -c byu-handwriting-lab hwr
