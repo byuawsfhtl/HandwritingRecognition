@@ -1,11 +1,11 @@
 # INFERENCE CONFIGURATION FILE
 
 # The path to the images to be inferred
-img_path: ./data/test_images
+img_path: ./data/example/test_images
 # The output path to the results of the inference
-out_path: ./data/iam_inference.csv
+out_path: ./data/example/iam_inference.csv
 # The path to the pre-trained model weights to be used during inference
-model_in: ./data/model_weights/hwr_model/run1
+model_in: ./data/model_weights/example_model/run1
 # The size which all images will be resized/padded for inference on the model
 img_size: (64, 1024)
 # The batch size to be used when performing inference on the model (how many images will be inferred at once)

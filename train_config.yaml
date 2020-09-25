@@ -1,7 +1,7 @@
 # Train Configuration File
 
 # The path to a tab-delimited CSV file containing training data information formatted as | IMG_PATH | Transcription |
-train_csv_path: ./data/training/iam/labels.csv
+train_csv_path: ./data/example/labels.csv
 # The path to a tab-delimited CSV file containing validation data information formatted as | IMG_PATH | Transcription |
 val_csv_path:
 # Whether or not to split the training set into a train/validation using the train_size parameter. Train = train_size, Val = (1 - train_size)
@@ -11,18 +11,18 @@ train_size: 0.8
 
 
 # The path to store the trained model weights
-model_out: ./data/model_weights/hwr_model/run1
+model_out: ./data/model_weights/example_model/run1
 # The path to pre-trained model weights
-model_in: ./data/model_weights/hwr_model/run1
+model_in: ./data/model_weights/example_model/run1
 # The frequency in epochs which the model weights will be saved during training
 save_every: 5
 
 # The number of epochs to train
-epochs: 2
+epochs: 100
 # The number of images in a mini-batch
-batch_size: 32
+batch_size: 1
 # The learning rate the optimizer uses during training
-learning_rate: 0.0004  # DO NOT use scientific notation! Pyyaml interprets scientific notation as string.
+learning_rate: 0.001  # DO NOT use scientific notation! Pyyaml interprets scientific notation as string.
 # The max number of characters in a line-level transcription
 max_seq_size: 128
 # The size which all images will be resized - (height, width)

@@ -2,6 +2,8 @@
 *.idea
 *.csv
 data/*
+!data/example
+!data/example/labels.csv
 *.tfrecords
 */test_images/*
 *.sh

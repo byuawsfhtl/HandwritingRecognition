@@ -71,12 +71,12 @@ def train_model(args):
     # Create train/validation datasets depending on configuration settings
     # Split the train dataset based on the TRAIN_SIZE parameter
     if configs[SPLIT_TRAIN]:
-        dataset_size = 100  # ds.get_dataset_size(configs[TRAIN_CSV_PATH])
+        dataset_size = ds.get_dataset_size(configs[TRAIN_CSV_PATH])
         train_dataset_size = int(configs[TRAIN_SIZE] * dataset_size)
         val_dataset_size = dataset_size - train_dataset_size
 
         dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
-                                                  eval(configs[IMG_SIZE])).take(100)
+                                                  eval(configs[IMG_SIZE]))
         train_dataset = dataset.take(train_dataset_size)\
                                .shuffle(100, reshuffle_each_iteration=True)\
                                .batch(configs[BATCH_SIZE])

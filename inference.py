@@ -62,7 +62,7 @@ def inference(args):
     inferences = []
 
     # Iterate through each of the images and perform inference
-    inference_loop = tqdm(total=dataset.cardinality().numpy(), position=0, leave=True)
+    inference_loop = tqdm(total=tf.data.experimental.cardinality(dataset).numpy(), position=0, leave=True)
     for imgs, img_names in dataset:
         output = model_inference(model, imgs)  # Without softmax
         predictions = tf.argmax(output, 2)
