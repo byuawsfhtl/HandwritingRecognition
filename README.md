@@ -99,6 +99,18 @@ Configuration File Arguments:
 * show_graphs: Whether or not to show graphs of the loss after training
 * metrics: Whether or not to include metrics other than loss on the validation set
 
+Training Example:
+* A few example images as well as a labels.csv file is included for reference in training and performing inference.
+  This data is included in the data/example folder.
+* Immediately after cloning this repository, you should be able to use the train.py script along with its
+  train_config.yaml file to perform training. The model weights will be stored under
+  data/model_weights/example_model/run1. You'll notice this as the *model_in* parameter in the inference_config file.
+* Simply run the following commands:
+
+`
+python train.py train_config.yaml
+`
+
 ### Inference
 
 Inference can be run using the following command:
@@ -117,6 +129,20 @@ Configuration File Arguments:
 * model_in: The path to the pre-trained model weights to be used during inference
 * img_size: The size which all images will be resized/padded for inference on the model
 * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
+
+
+Inference Example:
+* A few example test images are stored in the data/example/test_images folder for performing inference.
+* After running the training script, the model weights will be stored according to the model_out parameter
+  in the train_config file, data/model_weights/example_model/run1. In the example inference_config file, this
+  path is already specified.
+* After running the train.py script as specified above, you can perform inference on the example test images by
+  running the following command:
+  
+`
+python inference.py inference_config.yaml
+`
+
 
 
 ## Build the Conda Package to be uploaded to Anaconda Cloud
