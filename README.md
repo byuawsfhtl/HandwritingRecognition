@@ -23,7 +23,7 @@ conda env create -f environment.yaml
 conda activate hwr_env
 ```
 
-## Manual Usage
+## Usage With Provided Scripts
 
 Using the actual codebase, you have access to the ```train.py``` and ```inference.py``` scripts.
 
@@ -103,7 +103,7 @@ Inference Example:
 python inference.py inference_config.yaml
 ```
 
-### Conda Usage
+## Usage With Conda
 
 Potentially, the easiest way to access the code is to import the [conda package](https://anaconda.org/byu-handwriting-lab/hwr)
 
