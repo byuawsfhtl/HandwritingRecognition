@@ -23,46 +23,6 @@ conda env create -f environment.yaml
 conda activate hwr_env
 ```
 
-### Conda Usage
-
-Potentially, the easiest way to access the code is to import the [conda package](https://anaconda.org/byu-handwriting-lab/hwr)
-
-```
-conda install -c byu-handwriting-lab hwr
-```
-
-Code can then be accessed like any normal python package. For example, to use the recognition model,
-you could write something like this:
-
-```
-from hwr.model import Recognizer
-import hwr.dataset as ds
-
-import tensorflow as tf
-import numpy as np
-
-model = Recognizer()
-
-# Load some pretrained weights
-model_weights_path = './some/path/to/model/weights'
-model.load_weights(model_weights_path)
-
-# The mapping between integers and characters
-idx2char = ds.get_idx2char()
-
-# Simulate creating an image with random numbers
-fake_image = tf.constant(np.random.randn(1, 1024, 64, 1), dtype=tf.float32)
-
-# Run the image through the recognition model
-prob_dist = model(fake_image)
-predictions = tf.argmax(prob_dist, axis=2)
-
-# Convert to the character representation
-str_predictions = ds.idxs_to_str_batch(predictions, idx2char)
-
-print('Prediction:', str_predictions)
-```
-
 ## Manual Usage
 
 Using the actual codebase, you have access to the ```train.py``` and ```inference.py``` scripts.
@@ -107,9 +67,9 @@ Training Example:
   data/model_weights/example_model/run1. You'll notice this as the *model_in* parameter in the inference_config file.
 * Simply run the following commands:
 
-`
+```
 python train.py train_config.yaml
-`
+```
 
 ### Inference
 
@@ -139,11 +99,49 @@ Inference Example:
 * After running the train.py script as specified above, you can perform inference on the example test images by
   running the following command:
   
-`
+```
 python inference.py inference_config.yaml
-`
+```
 
+### Conda Usage
 
+Potentially, the easiest way to access the code is to import the [conda package](https://anaconda.org/byu-handwriting-lab/hwr)
+
+```
+conda install -c byu-handwriting-lab hwr
+```
+
+Code can then be accessed like any normal python package. For example, to use the recognition model,
+you could write something like this:
+
+```
+from hwr.model import Recognizer
+import hwr.dataset as ds
+
+import tensorflow as tf
+import numpy as np
+
+model = Recognizer()
+
+# Load some pretrained weights
+model_weights_path = './some/path/to/model/weights'
+model.load_weights(model_weights_path)
+
+# The mapping between integers and characters
+idx2char = ds.get_idx2char()
+
+# Simulate creating an image with random numbers
+fake_image = tf.constant(np.random.randn(1, 1024, 64, 1), dtype=tf.float32)
+
+# Run the image through the recognition model
+prob_dist = model(fake_image)
+predictions = tf.argmax(prob_dist, axis=2)
+
+# Convert to the character representation
+str_predictions = ds.idxs_to_str_batch(predictions, idx2char)
+
+print('Prediction:', str_predictions)
+```
 
 ## Build the Conda Package to be uploaded to Anaconda Cloud
 
