@@ -13,7 +13,7 @@ train_size: 0.8
 # The path to store the trained model weights
 model_out: ./data/model_weights/example_model/run1
 # The path to pre-trained model weights
-model_in: ./data/model_weights/example_model/run1
+model_in:
 # The frequency in epochs which the model weights will be saved during training
 save_every: 5
 

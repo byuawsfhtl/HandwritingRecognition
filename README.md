@@ -23,6 +23,15 @@ conda env create -f environment.yaml
 conda activate hwr_env
 ```
 
+If you are running on MacOS, you must use the MacOS-specific environment file:
+```
+conda env create -f environment_macos.yaml
+conda activate hwr_env
+```
+
+*Note that for MacOSX users, Tensorflow for Conda is currently not available for version 2.1.0. However, there is a
+2.0 version available. simply change the environment.yaml file to use
+
 ## Usage With Provided Scripts
 
 Using the actual codebase, you have access to the ```train.py``` and ```inference.py``` scripts.
