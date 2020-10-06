@@ -212,8 +212,10 @@ class ModelMetrics:
             str_labels = ds.idxs_to_str_batch(labels, self.idx2char, merge_repeated=False)
 
             # Ensure we are working with unicode strings rather than byte strings
-            str_predictions = [s.decode('utf8') if type(s) == np.bytes_ else s for s in str_predictions.numpy()]
-            str_labels = [s.decode('utf8') if type(s) == np.bytes_ else s for s in str_labels.numpy()]
+            str_predictions = [s.decode('utf8') if type(s) == np.bytes_ or type(s) == bytes else s
+                               for s in str_predictions.numpy()]
+            str_labels = [s.decode('utf8') if type(s) == np.bytes_ or type(s) == bytes else s
+                          for s in str_labels.numpy()]
 
             all_inferences.extend(str_predictions)
             all_labels.extend(str_labels)
