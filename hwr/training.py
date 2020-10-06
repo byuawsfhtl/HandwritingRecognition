@@ -211,8 +211,11 @@ class ModelMetrics:
             str_predictions = ds.idxs_to_str_batch(predictions, self.idx2char, merge_repeated=True)
             str_labels = ds.idxs_to_str_batch(labels, self.idx2char, merge_repeated=False)
 
-            all_inferences.extend(str_predictions.numpy().astype(str).tolist())
-            all_labels.extend(str_labels.numpy().astype(str).tolist())
+            str_predictions = [s.decode('utf8') if type(s) == np.bytes_ else s for s in str_predictions]
+            str_labels = [s.decode('utf8') if type(s) == np.bytes_ else s for s in str_labels]
+
+            all_inferences.extend(str_predictions)
+            all_labels.extend(str_labels)
 
         # Map all inferences/labels to update the error rates
         rates = ErrorRates()
