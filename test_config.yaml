@@ -1,0 +1,13 @@
+csv_path: ./data/example/labels.csv
+model_in: ./data/model_weights/example_model/run1
+
+batch_size: 2
+max_seq_size: 128
+img_size: (64, 1024)
+
+# Character Set - String including all characters to be represented in the network ( charset: abcdef1234...)
+#                 If no characters are specified, the default is used.
+charset:
+
+# WordBeamSearch parameters
+beam_width: 25

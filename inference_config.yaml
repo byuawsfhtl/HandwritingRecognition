@@ -12,3 +12,6 @@ img_size: (64, 1024)
 batch_size: 32
 # Whether or not to print the inference results to the console and show images - Useful for debugging
 console_out: False
+# Character Set - String including all characters to be represented in the network ( charset: abcdef1234...)
+#                 If no characters are specified, the default is used.
+charset:

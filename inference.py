@@ -15,6 +15,7 @@ MODEL_IN = 'model_in'
 IMG_SIZE = 'img_size'
 BATCH_SIZE = 'batch_size'
 CONSOLE_OUT = 'console_out'
+CHARSET = 'charset'
 
 
 def inference(args):
@@ -33,6 +34,8 @@ def inference(args):
     * model_in: The path to the pre-trained model weights to be used during inference
     * img_size: The size which all images will be resized/padded for inference on the model
     * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
+    * charset: String including all characters to be represented in the network (abcdef1234...)
+               If no characters are specified, the default is used.
 
     :param args: Command line arguments
     :return: None
@@ -55,8 +58,8 @@ def inference(args):
     dataset = ds.get_encoded_inference_dataset_from_img_path(configs[IMG_PATH], eval(configs[IMG_SIZE]))\
                 .batch(configs[BATCH_SIZE])
 
-    # Get the standard character set mapping
-    idx2char = ds.get_idx2char()
+    charset = configs[CHARSET] if not str(configs[CHARSET]) else None  # If no charset is given pass None to use default
+    idx2char = ds.get_idx2char(charset=charset)
 
     # Keep track of all inferences in list of tuples
     inferences = []

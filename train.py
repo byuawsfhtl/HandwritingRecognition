@@ -6,7 +6,6 @@ import tensorflow as tf
 
 import hwr.dataset as ds
 from hwr.training import ModelTrainer
-from hwr.training import ModelMetrics
 
 TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
@@ -20,8 +19,8 @@ LEARNING_RATE = 'learning_rate'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 SHOW_GRAPHS = 'show_graphs'
-INCLUDE_METRICS = 'include_metrics'
 SAVE_EVERY = 'save_every'
+CHARSET = 'charset'
 
 
 def train_model(args):
@@ -49,7 +48,8 @@ def train_model(args):
     * train_size: The ratio used to determine the size of the train/validation split.
                   Used ONLY if split_train is set to True
     * show_graphs: Whether or not to show graphs of the loss after training
-    * metrics: Whether or not to include metrics other than loss on the validation set
+    * charset: String including all characters to be represented in the network (abcdef1234...)
+               If no characters are specified, the default is used.
 
     :param args: command line arguments
     """
@@ -65,8 +65,9 @@ def train_model(args):
     # Print available devices so we know if we are using CPU or GPU
     tf.print('Devices Available:', tf.config.list_physical_devices())
 
-    char2idx = ds.get_char2idx()
-    idx2char = ds.get_idx2char()
+    charset = configs[CHARSET] if not str(configs[CHARSET]) else None  # If no charset is given pass None to use default
+    char2idx = ds.get_char2idx(charset=charset)
+    idx2char = ds.get_idx2char(charset=charset)
 
     # Create train/validation datasets depending on configuration settings
     # Split the train dataset based on the TRAIN_SIZE parameter
@@ -96,19 +97,14 @@ def train_model(args):
 
     # Train the model
     model_trainer = ModelTrainer(configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size, val_dataset,
-                                 val_dataset_size, configs[MODEL_OUT], model_in=configs[MODEL_IN], lr=configs[LEARNING_RATE],
-                                 max_seq_size=configs[MAX_SEQ_SIZE], save_every=configs[SAVE_EVERY])
+                                 val_dataset_size, configs[MODEL_OUT], model_in=configs[MODEL_IN],
+                                 lr=configs[LEARNING_RATE], max_seq_size=configs[MAX_SEQ_SIZE],
+                                 save_every=configs[SAVE_EVERY])
     model, losses = model_trainer.train()
 
     # Print the losses over the course of training
     print('Train Losses:', losses[0])
     print('Val Losses:', losses[1])
-
-    if configs[INCLUDE_METRICS]:
-        model_metrics = ModelMetrics(model, val_dataset, idx2char)
-        cer, wer = model_metrics.get_error_rates()
-        print('Character Error Rate: {:.2f}%'.format(cer * 100))
-        print('Word Error Rate: {:.2f}%'.format(wer * 100))
 
     # Print loss graph if command line argument specified it
     if configs[SHOW_GRAPHS]:

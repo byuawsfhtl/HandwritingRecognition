@@ -5,6 +5,7 @@ from tqdm import tqdm
 from hwr.model import Recognizer
 from hwr.metrics import ErrorRates
 from hwr.util import model_inference
+from hwr.wbs.decoder import WordBeamSearch
 
 import hwr.dataset as ds
 
@@ -192,14 +193,20 @@ class ModelMetrics:
     Used to provide metrics for a trained model.
     """
 
-    def __init__(self, model, dataset, idx2char):
+    def __init__(self, model, dataset, idx2char, wbs_decode=False):
         """
         :param model: The trained model to be tested
         :param dataset: The dataset likely in tf.data.dataset or Keras Sequence format
+        :param idx2char:
+        :param wbs_decode:
         """
         self.model = model
         self.dataset = dataset
         self.idx2char = idx2char
+        self.wbs_decode = wbs_decode
+
+        if self.wbs_decode:
+            self.decoder = WordBeamSearch(25, 'Words', 0.0,)
 
     def get_error_rates(self):
         all_inferences = []

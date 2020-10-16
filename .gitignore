@@ -8,3 +8,4 @@ data/*
 */test_images/*
 *.sh
 slurm*
+**/.DS_Store

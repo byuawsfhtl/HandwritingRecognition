@@ -3,56 +3,36 @@ import os
 import tensorflow as tf
 import pandas as pd
 
-# Default character set
-DEFAULT_INDICES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
-                   28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
-                   53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77,
-                   78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101,
-                   102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
-                   122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141,
-                   142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161,
-                   162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181,
-                   182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196]
-DEFAULT_CHARS = [' ', '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3',
-                 '4', '5', '6', '7', '8', '9', ':', ';', '=', '?', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', ']', '_', '`',
-                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-                 'u', 'v', 'w', 'x', 'y', 'z', '|', '~', '£', '§', '¨', '«', '¬', '\xad', '°', '²', '´', '·', 'º', '»',
-                 '¼', '½', '¾', 'À', 'Â', 'Ä', 'Ç', 'È', 'É', 'Ê', 'Ô', 'Ö', 'Ü', 'ß', 'à', 'á', 'â', 'ä', 'æ', 'ç',
-                 'è', 'é', 'ê', 'ë', 'ì', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ÿ', 'ł', 'Œ',
-                 'œ', 'Γ', 'Ζ', 'Τ', 'ά', 'ή', 'α', 'δ', 'ε', 'η', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'τ',
-                 'υ', 'χ', 'ψ', 'ω', 'ό', 'ώ', 'І', '‒', '–', '—', '†', '‡', '‰', '‹', '›', '₂', '₤', '℔', '⅓', '⅔',
-                 '⅕', '⅖', '⅗', '⅘', '⅙', '⅚', '⅛', '∆', '∇', '∫', '≠', '□', '♀', '♂', '✓', 'ｆ']
+DEFAULT_CHARS = ' !"#$%&\'()*+,-./0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`abcdefghijklmnopqrstuvwxyz|~£§¨«¬\xad' \
+                '°²´·º»¼½¾ÀÂÄÇÈÉÊÔÖÜßàáâäæçèéêëìîïñòóôöøùúûüÿłŒœΓΖΤάήαδεηικλμνξοπρτυχψωόώІ‒–—†‡‰‹›₂₤℔⅓⅔⅕⅖⅗⅘⅙⅚⅛∆∇∫≠□♀♂✓ｆ'
+DEFAULT_NON_PUNCTUATION = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÂÄÇÈÉÊÔÖÜßàáâäæçèéêëìîïñòóôöøùúûüÿ' \
+                          'łŒœΓΖΤάήαδεηικλμνξοπρτυχψωόώІ'
 
 
-def read_charset(filename):
+def str_charset_to_lists(charset):
     """
-    read_charset
+    Turns string containing all desired characters into list of chars and indices. This is required for mapping
+    between integer and char representations for use in the recognition model.
 
-    Read the indices and chars from a file. Not yet implemented...
-
-    :param filename:
-    :return: list of indices and chars
+    :param charset: charset as string of chars to be represented in model.
     """
-    return [], []
+    chars = list(charset)
+    indices = list(range(1, len(chars) + 1))
+    return chars, indices
 
 
-def get_char2idx(filename=None):
+def get_char2idx(charset=None):
     """
-    get_char2idx
-
     A tensorflow lookup table is created and returned which allows us to encode word transcriptions on the fly
     in the tf.data api. A standard python dictionary won't work when tensorflow is running in graph mode. This
     function will return a lookup table to convert between chars and indices.
 
-    :param filename: (Optional) filename that includes the desired character set
+    :param charset: string containing all desired characters to be represented. If no charset is specified,
+                    the default is used.
     :return: A tensorflow lookup table to convert characters to integers
     """
-    if filename is None:
-        indices = DEFAULT_INDICES
-        chars = DEFAULT_CHARS
-    else:
-        indices, chars = read_charset(filename)
+    str_charset = charset if charset is not None else DEFAULT_CHARS
+    chars, indices = str_charset_to_lists(str_charset)
 
     char2idx = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
@@ -66,22 +46,18 @@ def get_char2idx(filename=None):
     return char2idx
 
 
-def get_idx2char(filename=None):
+def get_idx2char(charset=None):
     """
-    get_idx2char
-
     A tensorflow lookup table is created and returned which allows us to encode word transcriptions on the fly
     in the tf.data api. A standard python dictionary won't work when tensorflow is running in graph mode. This
     function will return a lookup table to convert between indices and chars.
 
-    :param filename:
+    :param charset: string containing all desired characters to be represented. If no charset is specified,
+                    the default is used.
     :return: A tensorflow lookup table to convert integers to characters
     """
-    if filename is None:
-        indices = DEFAULT_INDICES
-        chars = DEFAULT_CHARS
-    else:
-        indices, chars = read_charset(filename)
+    str_charset = charset if charset is not None else DEFAULT_CHARS
+    chars, indices = str_charset_to_lists(str_charset)
 
     idx2char = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
@@ -97,8 +73,6 @@ def get_idx2char(filename=None):
 
 def pad_or_truncate(t, sequence_size=128):
     """
-    pad_or_trunc
-
     Pad or truncate a tensor to a fixed sequence length. Works for use in the tf.data api in graph mode.
 
     :param t: The tensor to pad or truncate
@@ -113,8 +87,6 @@ def pad_or_truncate(t, sequence_size=128):
 
 def merge_repeating_values(t):
     """
-    merge_repeating_values
-
     Merge repeating indices/characters in a tensor. Utilizes only tf.* functions which makes it
     usable in graph mode.
 
@@ -129,8 +101,6 @@ def merge_repeating_values(t):
 
 def str_to_idxs(string, char2idx, sequence_size):
     """
-    str_to_idxs
-
     Perform the actual lookup to convert a string to its integer representation. This function also performs
     padding according to the given sequence size. Works for use in the tf.data api in graph mode.
 
@@ -145,8 +115,6 @@ def str_to_idxs(string, char2idx, sequence_size):
 
 def idxs_to_str(idxs, idx2char, merge_repeated=True):
     """
-    idxs_to_str
-
     Perform the actual lookup to convert an integer to its string representation.
     Works for use in the tf.data api in graph mode.
 
@@ -165,8 +133,6 @@ def idxs_to_str(idxs, idx2char, merge_repeated=True):
 
 def str_to_idxs_batch(batch, char2idx, sequence_size=128):
     """
-    str_to_idxs_batch
-
     Perform the same function as str_to_idxs, except a batch of strings are given as input
 
     :param batch: A batch of strings as tensor, list, or numpy array
@@ -180,8 +146,6 @@ def str_to_idxs_batch(batch, char2idx, sequence_size=128):
 
 def idxs_to_str_batch(batch, idx2char, merge_repeated=True):
     """
-    idxs_to_str_batch
-
     Perform the same function as idxs_to_str, except a batch of idxs are given as input
 
     :param batch: A batch of idxs as tensor, list, or numpy array
@@ -195,8 +159,6 @@ def idxs_to_str_batch(batch, idx2char, merge_repeated=True):
 
 def read_and_encode_image(img_path, img_size=(64, 1024)):
     """
-    read_and_encode_image
-
     Used by both encode_img_and_transcription (training) and encode_img_with_name (inference). This method
     simply loads the image given a file path and performs the necessary encoding/resizing/transposing that
     is necessary for use on the recognition model.
@@ -216,8 +178,6 @@ def read_and_encode_image(img_path, img_size=(64, 1024)):
 
 def encode_img_and_transcription(img_path, transcription, char2idx, sequence_size=128, img_size: tuple = (64, 1024)):
     """
-    encode_img_and_transcription
-
     The actual function to map image paths and string transcriptions to its tensor/integer representation.
 
     :param img_path: The path to the desired image
@@ -234,8 +194,6 @@ def encode_img_and_transcription(img_path, transcription, char2idx, sequence_siz
 
 def encode_img_with_name(img_path, file_separator, img_size=(64, 1024)):
     """
-    encode img_with_name
-
     Used to map img_paths to encoded images for inference. Returned is the encoded image and image name.
 
     :param img_path: The file path to the image
@@ -251,8 +209,6 @@ def encode_img_with_name(img_path, file_separator, img_size=(64, 1024)):
 
 def get_dataset_size(csv_path):
     """
-    get_dataset_size
-
     The tf.data api has a hard time producing the the dataset size. The cardinality() method often
     returns unknown even with the CsvDataset. This function uses pandas to get the length.
 
@@ -264,8 +220,6 @@ def get_dataset_size(csv_path):
 
 def get_encoded_dataset_from_csv(csv_path, char2idx, max_seq_size, img_size):
     """
-    get_encoded_dataset_from_csv
-
     Using the tf.data api, load the desired csv with img_path and transcription data, encode the images and
     transcriptions for use on the recognition model and return the desired tf dataset.
 
@@ -286,8 +240,6 @@ def get_encoded_dataset_from_csv(csv_path, char2idx, max_seq_size, img_size):
 
 def get_encoded_inference_dataset_from_img_path(img_path, img_size):
     """
-    get_encoded_inference_dataset_from_img_path
-
     Using the tf.data api, load all images from the desired path and return a dataset containing encoded images
     and the image name (without path or extension information).
 

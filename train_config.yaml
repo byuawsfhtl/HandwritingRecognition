@@ -30,5 +30,6 @@ img_size: (64, 1024)
 
 # Whether or not to show graphs of the loss after training
 show_graphs: False  # Make sure True/False booleans are capitalized!
-# Whether or not to include metrics other than loss on the validation set
-include_metrics: True
+# Character Set - String including all characters to be represented in the network ( charset: abcdef1234...)
+#                 If no characters are specified, the default is used.
+charset:
