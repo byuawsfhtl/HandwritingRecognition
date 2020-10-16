@@ -1,4 +1,5 @@
 import sys
+import time
 
 import tensorflow as tf
 import numpy as np
@@ -8,7 +9,7 @@ from tqdm import tqdm
 import hwr.dataset as ds
 from hwr.model import Recognizer
 from hwr.metrics import ErrorRates
-from hwr.util import model_inference
+from hwr.util import model_inference_bp_wbs
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
 
@@ -75,15 +76,13 @@ def test(args):
     loop = tqdm(total=int(np.round(dataset_size/configs[BATCH_SIZE])), position=0, leave=True)
     for images, labels in dataset:
         # Run inference on the model
-        output = model_inference(model, images)
+        bp_prediction, wbs_prediction = model_inference_bp_wbs(model, images, wbs)
 
         # Perform best-path decoding, map to strings, and append to prediction list
-        bp_prediction = tf.argmax(output, axis=2)
         str_bp_prediction = ds.idxs_to_str_batch(bp_prediction, idx2char, merge_repeated=True)
         bp_predictions.extend(bytes_to_unicode(str_bp_prediction))
 
         # Perform word-beam-search decoding, map to strings, and append to prediction list
-        wbs_prediction = wbs(output)
         str_wbs_prediction = ds.idxs_to_str_batch(wbs_prediction, idx2char, merge_repeated=False)
         wbs_predictions.extend(bytes_to_unicode(str_wbs_prediction))
 
