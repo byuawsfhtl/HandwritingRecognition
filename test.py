@@ -3,6 +3,7 @@ import sys
 import tensorflow as tf
 import numpy as np
 import yaml
+from tqdm import tqdm
 
 import hwr.dataset as ds
 from hwr.model import Recognizer
@@ -57,6 +58,7 @@ def test(args):
     dataset = ds.get_encoded_dataset_from_csv(configs[CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                               eval(configs[IMG_SIZE]))\
         .batch(configs[BATCH_SIZE])
+    dataset_size = ds.get_dataset_size(configs[CSV_PATH])
 
     model = Recognizer()  # Plus the ctc-blank character
     model.load_weights(configs[MODEL_IN])
@@ -69,6 +71,7 @@ def test(args):
     wbs_predictions = []
     actual_labels = []
 
+    loop = tqdm(total=int(np.round(dataset_size/configs[BATCH_SIZE])), position=0, leave=True)
     for images, labels in dataset:
         # Run inference on the model
         output = model_inference(model, images)
@@ -86,6 +89,7 @@ def test(args):
         # Get labels, map to strings, and append to label list
         str_labels = ds.idxs_to_str_batch(labels, idx2char, merge_repeated=False)
         actual_labels.extend(bytes_to_unicode(str_labels))
+        loop.update(1)
 
     bp_rates = ErrorRates()
     wbs_rates = ErrorRates()
