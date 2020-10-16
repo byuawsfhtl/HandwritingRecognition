@@ -34,6 +34,7 @@ class WordBeamSearch:
         self.module = tf.load_op_library(op_path)
 
     def decode(self, mat):
+        mat = tf.nn.softmax(mat)
         mat = tf.transpose(mat, [1, 0, 2])  # Transpose to get (SequenceLength x BatchSize x NumClasses)
         mat = tf.roll(mat, shift=-1, axis=2)  # Roll the class axis to place ctc-blank last (which is what wbs expects)
         output = self.module.word_beam_search(mat, self.beam_width, self.lm_type, self.lm_smoothing, self.corpus,
