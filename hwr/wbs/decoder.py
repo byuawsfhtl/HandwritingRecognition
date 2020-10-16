@@ -6,6 +6,7 @@ from hwr.wbs.loader import FilePaths
 class WordBeamSearch:
     def __init__(self, beam_width, lm_type, lm_smoothing, corpus, chars, word_chars, os_type='linux', gpu=True,
                  multithreaded=False):
+        self.num_chars = len(chars)
         self.beam_width = beam_width
         self.lm_type = lm_type
         self.lm_smoothing = lm_smoothing
@@ -39,7 +40,10 @@ class WordBeamSearch:
                                               self.chars, self.word_chars)
         int64_output = tf.cast(output, tf.int64)
 
-        return int64_output
+        # Reverse the action of the tf.roll to get back to expected indices
+        wbs_output = tf.math.floormod(tf.math.add(int64_output, 1), self.num_chars + 1)
+
+        return wbs_output
 
     def __call__(self, mat):
         return self.decode(mat)
