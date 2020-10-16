@@ -11,6 +11,10 @@ WBS_LINUX_GPU_PARALLEL_8 = 'data/TFWordBeamSearchLinuxGPUParallel8.so'
 CENSUS_NAMES_5 = 'data/census_names_5.txt'
 CENSUS_NAMES_10 = 'data/census_names_10.txt'
 CENSUS_NAMES_15 = 'data/census_names_15.txt'
+CENSUS_NAMES_50 = 'data/census_names_50.txt'
+CENSUS_NAMES_100 = 'data/census_names_100.txt'
+CENSUS_NAMES_250 = 'data/census_names_250.txt'
+CENSUS_NAMES_500 = 'data/census_names_500.txt'
 
 
 class FilePaths:
@@ -66,6 +70,22 @@ class FilePaths:
     @staticmethod
     def census_names_15():
         return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_15)
+
+    @staticmethod
+    def census_names_50():
+        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_50)
+
+    @staticmethod
+    def census_names_100():
+        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_100)
+
+    @staticmethod
+    def census_names_250():
+        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_250)
+
+    @staticmethod
+    def census_names_500():
+        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_500)
 
 
 class DictionaryLoader:
@@ -140,3 +160,35 @@ class DictionaryLoader:
         This list contains names that occurred at least 15 times in the 5 censuses combined.
         """
         return DictionaryLoader.from_file(FilePaths.census_names_15(), include_cased=include_cased)
+
+    @staticmethod
+    def census_names_50(include_cased=False):
+        """
+        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
+        This list contains names that occurred at least 50 times in the 5 censuses combined.
+        """
+        return DictionaryLoader.from_file(FilePaths.census_names_50(), include_cased=include_cased)
+
+    @staticmethod
+    def census_names_100(include_cased=False):
+        """
+        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
+        This list contains names that occurred at least 100 times in the 5 censuses combined.
+        """
+        return DictionaryLoader.from_file(FilePaths.census_names_100(), include_cased=include_cased)
+
+    @staticmethod
+    def census_names_250(include_cased=False):
+        """
+        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
+        This list contains names that occurred at least 250 times in the 5 censuses combined.
+        """
+        return DictionaryLoader.from_file(FilePaths.census_names_250(), include_cased=include_cased)
+
+    @staticmethod
+    def census_names_500(include_cased=False):
+        """
+        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
+        This list contains names that occurred at least 500 times in the 5 censuses combined.
+        """
+        return DictionaryLoader.from_file(FilePaths.census_names_500(), include_cased=include_cased)
