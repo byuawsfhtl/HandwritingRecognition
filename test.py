@@ -19,6 +19,7 @@ BATCH_SIZE = 'batch_size'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 CHARSET = 'charset'
+SHOW_PREDICTIONS = 'show_predictions'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
 WBS_OS_TYPE = 'wbs_os_type'
 WBS_GPU = 'wbs_gpu'
@@ -94,6 +95,10 @@ def test(args):
     bp_rates = ErrorRates()
     wbs_rates = ErrorRates()
     for bp_pred, wbs_pred, y_true in zip(bp_predictions, wbs_predictions, actual_labels):
+        if configs[SHOW_PREDICTIONS]:
+            print('Best Path Prediction:', bp_pred)
+            print('Word Beam Search Prediction:', wbs_pred)
+            print('Ground Truth:', y_true)
         bp_rates.update(y_true, bp_pred)
         wbs_rates.update(y_true, wbs_pred)
 

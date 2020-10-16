@@ -8,6 +8,8 @@ img_size: (64, 1024)
 # Character Set - String including all characters to be represented in the network ( charset: abcdef1234...)
 #                 If no characters are specified, the default is used.
 charset:
+# Whether or not to print examples to the console that contains predictions (using bp and wbs) and ground-truth labels
+show_predictions: True
 
 # WordBeamSearch parameters
 wbs_beam_width: 25
