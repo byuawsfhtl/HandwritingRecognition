@@ -18,7 +18,10 @@ BATCH_SIZE = 'batch_size'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 CHARSET = 'charset'
-BEAM_WIDTH = 'beam_width'
+WBS_BEAM_WIDTH = 'wbs_beam_width'
+WBS_OS_TYPE = 'wbs_os_type'
+WBS_GPU = 'wbs_gpu'
+WBS_MULTITHREADED = 'wbs_multithreaded'
 
 
 def test(args):
@@ -58,8 +61,9 @@ def test(args):
     model = Recognizer()  # Plus the ctc-blank character
     model.load_weights(configs[MODEL_IN])
 
-    wbs = WordBeamSearch(configs[BEAM_WIDTH], 'Words', 0.0, DictionaryLoader.census_names_15(include_cased=True),
-                         ds.DEFAULT_CHARS, ds.DEFAULT_NON_PUNCTUATION, multithreaded=True)
+    wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, DictionaryLoader.census_names_15(include_cased=True),
+                         ds.DEFAULT_CHARS, ds.DEFAULT_NON_PUNCTUATION, os_type=configs[WBS_OS_TYPE],
+                         gpu=configs[WBS_GPU], multithreaded=configs[WBS_MULTITHREADED])
 
     bp_predictions = []
     wbs_predictions = []

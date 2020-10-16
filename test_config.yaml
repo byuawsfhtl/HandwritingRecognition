@@ -10,4 +10,10 @@ img_size: (64, 1024)
 charset:
 
 # WordBeamSearch parameters
-beam_width: 25
+wbs_beam_width: 25
+# Either 'mac' or 'linux'
+wbs_os_type: mac
+# Whether or not to include 'GPU' support for WBS Custom OP
+wbs_gpu: False
+# Whether or not to use 8 threads when decoding model output matrix
+wbs_multithreaded: False

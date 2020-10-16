@@ -4,7 +4,8 @@ from hwr.wbs.loader import FilePaths
 
 
 class WordBeamSearch:
-    def __init__(self, beam_width, lm_type, lm_smoothing, corpus, chars, word_chars, multithreaded=False):
+    def __init__(self, beam_width, lm_type, lm_smoothing, corpus, chars, word_chars, os_type='linux', gpu=True,
+                 multithreaded=False):
         self.beam_width = beam_width
         self.lm_type = lm_type
         self.lm_smoothing = lm_smoothing
@@ -12,10 +13,24 @@ class WordBeamSearch:
         self.chars = chars.encode('utf8')
         self.word_chars = word_chars.encode('utf8')
 
-        if multithreaded:
-            self.module = tf.load_op_library(FilePaths.wbs_parallel_8())
+        assert os_type in ['linux', 'mac']  #
+
+        if os_type == 'linux' and gpu and multithreaded:
+            op_path = FilePaths.wbs_linux_gpu_parallel_8()
+        elif os_type == 'linux' and not gpu and multithreaded:
+            op_path = FilePaths.wbs_linux_parallel_8()
+        elif os_type == 'linux' and not gpu and not multithreaded:
+            op_path = FilePaths.wbs_linux()
+        elif os_type == 'linux' and gpu and not multithreaded:
+            op_path = FilePaths.wbs_linux_gpu()
+        elif os_type == 'mac' and multithreaded:
+            op_path = FilePaths.wbs_mac_parallel_8()
+        elif os_type == 'mac' and not multithreaded:
+            op_path = FilePaths.wbs_mac()
         else:
-            self.module = tf.load_op_library(FilePaths.wbs_single_threaded())
+            raise Exception('Unsupported Platform! Must be [linux, mac]. Windows not supported for TF custom ops')
+
+        self.module = tf.load_op_library(op_path)
 
     def decode(self, mat):
         mat = tf.transpose(mat, [1, 0, 2])  # Transpose to get (SequenceLength x BatchSize x NumClasses)
