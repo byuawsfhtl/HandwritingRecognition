@@ -70,6 +70,8 @@ def test(args):
                                               eval(configs[IMG_SIZE]))\
         .skip(int(dataset_size * (1 - configs[DATASET_EVAL_SIZE])))\
         .batch(configs[BATCH_SIZE])
+    # Recalculate dataset size after skipping part of the dataset as specified by dataset_eval_size parameter
+    dataset_size = dataset_size - int(dataset_size * (1 - configs[DATASET_EVAL_SIZE]))
 
     # Create the recognition model and load the pre-trained weights
     model = Recognizer(vocabulary_size=len(charset) + 1)  # Plus the ctc-blank character
