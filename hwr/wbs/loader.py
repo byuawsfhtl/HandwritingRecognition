@@ -1,6 +1,7 @@
 import os
 
 ENGLISH_WORDS = 'data/english_words.txt'
+FRENCH_WORDS = 'data/french_words.txt'
 ASCII_NAMES = 'data/ascii_names.txt'
 WBS_MAC = 'data/TFWordBeamSearchMac.so'
 WBS_MAC_PARALLEL_8 = 'data/TFWordBeamSearchMacParallel8.so'
@@ -30,6 +31,10 @@ class FilePaths:
     @staticmethod
     def english_words():
         return os.path.join(FilePaths.current_file_path(), ENGLISH_WORDS)
+
+    @staticmethod
+    def french_words():
+        return os.path.join(FilePaths.current_file_path(), FRENCH_WORDS)
 
     @staticmethod
     def ascii_names():
@@ -126,6 +131,16 @@ class DictionaryLoader:
         :return: String of english words separated by newline
         """
         return DictionaryLoader.from_file(FilePaths.english_words(), include_cased=include_cased)
+
+    @staticmethod
+    def french_words(include_cased=False):
+        """
+        List of XXXXX french words.
+        :param include_cased: True indicating a desire to add both the lower-cased and capitalized word or False to only
+                            include the word as given in the list.
+        :return: String of French words separated by newline
+        """
+        return DictionaryLoader.from_file(FilePaths.french_words(), include_cased=include_cased)
 
     @staticmethod
     def ascii_names(include_cased=False):
