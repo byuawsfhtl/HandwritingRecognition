@@ -2,15 +2,14 @@ import sys
 
 import matplotlib.pyplot as plt
 import yaml
-import tensorflow as tf
 
+from hwr.model import Recognizer
 import hwr.dataset as ds
 from hwr.training import ModelTrainer
 
 TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
-SPLIT_TRAIN = 'split_train'
-TRAIN_SIZE = 'train_size'
+SPLIT_TRAIN_SIZE = 'split_train_size'
 MODEL_OUT = 'model_out'
 MODEL_IN = 'model_in'
 EPOCHS = 'epochs'
@@ -34,19 +33,22 @@ def train_model(args):
       is provided as "train_config.yaml".
 
     Configuration File Arguments:
-    * csv_path: The path to a tab-delimited CSV file containing | IMG_PATH | TRANSCRIPTION |
-                * Note that the IMG_PATH is relative to the location of the CSV
+    * train_csv_path: The path to a tab-delimited CSV file containing training data information formatted as:
+                      | IMG_PATH | Transcription |
+    * val_csv_path: The path to a tab_delimited CSV file containing validation data information formatted as:
+                      | IMG_PATH | Transcription |     This field may be left blank if Split Train is set to True.
+    * split_train_size: The ratio used to determine the size of the train/validation split. If split_train_size is set
+                        to 0.8, then the training set will contain 80% of the data, and validation 20%. The dataset is
+                        not shuffled before being split. If a val_csv_path is given, this parameter will not be used.
+                        Otherwise, the training set will be split using this parameter.
     * model_out: The path to store the trained model weights after training
     * model_in: The path to pre-trained model weights to be loaded before training begins
+    * save_every: The frequency in epochs which the model weights will be saved during training
     * epochs: The number of epochs to train
     * batch_size: The number of images in a mini-batch
     * learning_rate: The learning rate the optimizer uses during training
     * max_seq_size: The max number of characters in a line-level transcription
     * img_size: The size which all images will be resized for training
-    * split_train: Whether or not to split the training set into a train/validation using the train_size parameter.
-                   Train = train_size, Val = (1 - train_size)
-    * train_size: The ratio used to determine the size of the train/validation split.
-                  Used ONLY if split_train is set to True
     * show_graphs: Whether or not to show graphs of the loss after training
     * charset: String including all characters to be represented in the network (abcdef1234...)
                If no characters are specified, the default is used.
@@ -62,18 +64,15 @@ def train_model(args):
     with open(args[0]) as f:
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
-    # Print available devices so we know if we are using CPU or GPU
-    tf.print('Devices Available:', tf.config.list_physical_devices())
-
-    charset = configs[CHARSET] if not str(configs[CHARSET]) else None  # If no charset is given pass None to use default
+    charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
     char2idx = ds.get_char2idx(charset=charset)
-    idx2char = ds.get_idx2char(charset=charset)
 
     # Create train/validation datasets depending on configuration settings
-    # Split the train dataset based on the TRAIN_SIZE parameter
-    if configs[SPLIT_TRAIN]:
+
+    # Split the train dataset depending on if the val_csv_path is empty
+    if not configs[VAL_CSV_PATH]:  # Will evaluate to False if empty
         dataset_size = ds.get_dataset_size(configs[TRAIN_CSV_PATH])
-        train_dataset_size = int(configs[TRAIN_SIZE] * dataset_size)
+        train_dataset_size = int(configs[SPLIT_TRAIN_SIZE] * dataset_size)
         val_dataset_size = dataset_size - train_dataset_size
 
         dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
@@ -95,10 +94,14 @@ def train_model(args):
         val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                       eval(configs[IMG_SIZE])).batch(configs[BATCH_SIZE])
 
+    # Create the model and load any given pre-trained weights
+    model = Recognizer(vocabulary_size=len(charset) + 1)
+    if configs[MODEL_IN]:
+        model.load_weights(configs[MODEL_IN])
+
     # Train the model
-    model_trainer = ModelTrainer(configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size, val_dataset,
-                                 val_dataset_size, configs[MODEL_OUT], model_in=configs[MODEL_IN],
-                                 lr=configs[LEARNING_RATE], max_seq_size=configs[MAX_SEQ_SIZE],
+    model_trainer = ModelTrainer(model, configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size,
+                                 val_dataset, val_dataset_size, configs[MODEL_OUT], lr=configs[LEARNING_RATE], max_seq_size=configs[MAX_SEQ_SIZE],
                                  save_every=configs[SAVE_EVERY])
     model, losses = model_trainer.train()
 

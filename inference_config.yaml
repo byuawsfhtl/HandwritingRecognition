@@ -12,6 +12,19 @@ img_size: (64, 1024)
 batch_size: 32
 # Whether or not to print the inference results to the console and show images - Useful for debugging
 console_out: False
-# Character Set - String including all characters to be represented in the network ( charset: abcdef1234...)
-#                 If no characters are specified, the default is used.
+# String including the character set for the model (charset: abcd1234) If no characters are specified, the default is used.
 charset:
+
+# Whether or not to use the Word Beam Search decoding algorithm (Note that all parameters following 'use_wbs' are only
+# required when use_wbs is set to True).
+use_wbs: False
+# Non-Punctuation character set (wbs_word_charset: 'abcdefABCDEF'). If not characters are specified, the default is used.
+wbs_word_charset:
+# Beam width use for wbs algorithm
+wbs_beam_width: 25
+# Operating System type ['mac', 'linux'] Windows not supported for Word Beam Search
+wbs_os_type: mac
+# Whether or not to include GPU support for Word Beam Search Custom Op
+wbs_gpu: False
+# Whether or not to use 8 threads when decoding model output matrix
+wbs_multithreaded: False

@@ -5,8 +5,6 @@ import tensorflow.keras.constraints as kc
 
 class FullGatedConv2D(kl.Conv2D):
     """
-    FullGatedConv2D
-
     Gated Convolutional Layer as described in the paper, Gated Convolutional Recurrent Neural Networks for Multilingual
     Handwriting Recognition (https://ieeexplore-ieee-org.erl.lib.byu.edu/document/8270042). Code obtained from the Flor
     implementation ()
@@ -45,8 +43,6 @@ class FullGatedConv2D(kl.Conv2D):
 
 class Recognizer(tf.keras.Model):
     """
-    Recognizer
-
     Handwriting Recognition Model as described in the Blog Post,
     https://medium.com/@arthurflor23/handwritten-text-recognition-using-tensorflow-2-0-f4352b7afe16.
     This model combines ideas from the following papers:

@@ -3,8 +3,10 @@ import os
 import tensorflow as tf
 import pandas as pd
 
+# The default list of characters used in the recognition model
 DEFAULT_CHARS = ' !"#$%&\'()*+,-./0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`abcdefghijklmnopqrstuvwxyz|~£§¨«¬\xad' \
                 '°²´·º»¼½¾ÀÂÄÇÈÉÊÔÖÜßàáâäæçèéêëìîïñòóôöøùúûüÿłŒœΓΖΤάήαδεηικλμνξοπρτυχψωόώІ‒–—†‡‰‹›₂₤℔⅓⅔⅕⅖⅗⅘⅙⅚⅛∆∇∫≠□♀♂✓ｆ'
+# The default list of non-punctuation characters needed for the word beam search decoding algorithm
 DEFAULT_NON_PUNCTUATION = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÂÄÇÈÉÊÔÖÜßàáâäæçèéêëìîïñòóôöøùúûüÿ' \
                           'łŒœΓΖΤάήαδεηικλμνξοπρτυχψωόώІ'
 
@@ -21,18 +23,16 @@ def str_charset_to_lists(charset):
     return chars, indices
 
 
-def get_char2idx(charset=None):
+def get_char2idx(charset):
     """
     A tensorflow lookup table is created and returned which allows us to encode word transcriptions on the fly
     in the tf.data api. A standard python dictionary won't work when tensorflow is running in graph mode. This
     function will return a lookup table to convert between chars and indices.
 
-    :param charset: string containing all desired characters to be represented. If no charset is specified,
-                    the default is used.
+    :param charset: string containing all desired characters to be represented
     :return: A tensorflow lookup table to convert characters to integers
     """
-    str_charset = charset if charset is not None else DEFAULT_CHARS
-    chars, indices = str_charset_to_lists(str_charset)
+    chars, indices = str_charset_to_lists(charset)
 
     char2idx = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
@@ -46,18 +46,16 @@ def get_char2idx(charset=None):
     return char2idx
 
 
-def get_idx2char(charset=None):
+def get_idx2char(charset):
     """
     A tensorflow lookup table is created and returned which allows us to encode word transcriptions on the fly
     in the tf.data api. A standard python dictionary won't work when tensorflow is running in graph mode. This
     function will return a lookup table to convert between indices and chars.
 
-    :param charset: string containing all desired characters to be represented. If no charset is specified,
-                    the default is used.
+    :param charset: string containing all desired characters to be represented.
     :return: A tensorflow lookup table to convert integers to characters
     """
-    str_charset = charset if charset is not None else DEFAULT_CHARS
-    chars, indices = str_charset_to_lists(str_charset)
+    chars, indices = str_charset_to_lists(charset)
 
     idx2char = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
@@ -192,19 +190,17 @@ def encode_img_and_transcription(img_path, transcription, char2idx, sequence_siz
     return img, line
 
 
-def encode_img_with_name(img_path, file_separator, img_size=(64, 1024)):
+def encode_img_with_name(img_path, img_size=(64, 1024)):
     """
     Used to map img_paths to encoded images for inference. Returned is the encoded image and image name.
 
     :param img_path: The file path to the image
-    :param file_separator: The os specific file separator - can be obtained with os.path.sep
     :param img_size: The size of the image after resizing/padding
-    :return: The encoded image and image name
+    :return: The encoded image and image path
     """
     img = read_and_encode_image(img_path, img_size)
-    img_name = tf.strings.split(tf.strings.split(img_path, sep=file_separator)[-1], sep='.')[0]
 
-    return img, img_name
+    return img, img_path
 
 
 def get_dataset_size(csv_path):
@@ -248,4 +244,4 @@ def get_encoded_inference_dataset_from_img_path(img_path, img_size):
     :return: The tf dataset containing encoded images and their respective string names
     """
     return tf.data.Dataset.list_files(img_path + '/*', shuffle=False).map(
-        lambda path: encode_img_with_name(path, os.path.sep, img_size))
+        lambda path: encode_img_with_name(path, img_size))

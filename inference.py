@@ -5,9 +5,11 @@ import pandas as pd
 import yaml
 from tqdm import tqdm
 
-from hwr.model import Recognizer
-from hwr.util import model_inference
 import hwr.dataset as ds
+from hwr.model import Recognizer
+from hwr.util import model_inference_bp, model_inference_wbs
+from hwr.wbs.loader import DictionaryLoader
+from hwr.wbs.decoder import WordBeamSearch
 
 IMG_PATH = 'img_path'
 OUT_PATH = 'out_path'
@@ -16,6 +18,13 @@ IMG_SIZE = 'img_size'
 BATCH_SIZE = 'batch_size'
 CONSOLE_OUT = 'console_out'
 CHARSET = 'charset'
+
+USE_WBS = 'use_wbs'
+WBS_WORD_CHARSET = 'wbs_word_charset'
+WBS_BEAM_WIDTH = 'wbs_beam_width'
+WBS_OS_TYPE = 'wbs_os_type'
+WBS_GPU = 'wbs_gpu'
+WBS_MULTITHREADED = 'wbs_multithreaded'
 
 
 def inference(args):
@@ -36,6 +45,11 @@ def inference(args):
     * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
     * charset: String including all characters to be represented in the network (abcdef1234...)
                If no characters are specified, the default is used.
+    * use_wbs: Boolean indicating whether or not to use Word Beam Search for decoding. If False, best path is used.
+    * wbs_beam_width: The beam width needed for the word beam search algorithm
+    * wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
+    * wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
+    * wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
 
     :param args: Command line arguments
     :return: None
@@ -48,18 +62,27 @@ def inference(args):
     with open(args[0]) as f:
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
-    # Print available devices so we know if we are using CPU or GPU
-    tf.print('Devices Available:', tf.config.list_physical_devices())
-
-    # Create the model object and load the pre-trained model weights
-    model = Recognizer()
-    model.load_weights(configs[MODEL_IN])
-
+    # Create the tensorflow dataset with images to be inferred
     dataset = ds.get_encoded_inference_dataset_from_img_path(configs[IMG_PATH], eval(configs[IMG_SIZE]))\
                 .batch(configs[BATCH_SIZE])
 
-    charset = configs[CHARSET] if not str(configs[CHARSET]) else None  # If no charset is given pass None to use default
+    # Load our character set
+    charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
+    word_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
     idx2char = ds.get_idx2char(charset=charset)
+
+    # Create the model object and load the pre-trained model weights
+    model = Recognizer(vocabulary_size=len(charset) + 1)  # +1 for the CTC-blank character
+    if configs[MODEL_IN]:
+        model.load_weights(configs[MODEL_IN])
+
+    # Corpus creation. Currently, this is a manual process of loading in specific dictionaries. Enhancements will be
+    # added later to allow for custom dictionaries to be loaded.
+    corpus = DictionaryLoader.ascii_names(include_cased=True) + '\n' +\
+        DictionaryLoader.english_words(include_cased=True)
+
+    wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, word_charset,
+                         os_type=configs[WBS_OS_TYPE], gpu=configs[WBS_GPU], multithreaded=configs[WBS_MULTITHREADED])
 
     # Keep track of all inferences in list of tuples
     inferences = []
@@ -67,12 +90,17 @@ def inference(args):
     # Iterate through each of the images and perform inference
     inference_loop = tqdm(total=tf.data.experimental.cardinality(dataset).numpy(), position=0, leave=True)
     for imgs, img_names in dataset:
-        output = model_inference(model, imgs)  # Without softmax
-        predictions = tf.argmax(output, 2)
+        if configs[USE_WBS]:  # Use Word Beam Search Decoding
+            predictions = model_inference_wbs(model, imgs, wbs)
+        else:  # Use Best Path Decoding
+            predictions = model_inference_bp(model, imgs)
+
+        # Convert predictions to strings
         str_predictions = ds.idxs_to_str_batch(predictions, idx2char)
 
+        # Append to inferences list
         for str_pred, img_name in zip(str_predictions.numpy(), img_names.numpy()):
-            inferences.append([str(str_pred, 'utf-8'), str(img_name, 'utf-8')])  # byte-string -> utf-8 string
+            inferences.append([str(img_name, 'utf-8'), str(str_pred, 'utf-8')])  # byte-string -> utf-8 string
 
         inference_loop.update(1)
     inference_loop.close()

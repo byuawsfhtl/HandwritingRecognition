@@ -1,19 +1,26 @@
+# The path to a tab-delimited CSV file containing training data information formatted as | IMG_PATH | Transcription |
 csv_path: ./data/example/labels.csv
+# How much of the dataset should be used when testing and acquiring error rates
+dataset_eval_size: 1.0
+# The path to the pre-trained model weights
 model_in: ./data/model_weights/example_model/run1
-
+# The number of images in a mini-batch
 batch_size: 2
+# The max number of characters in a line-level transcription
 max_seq_size: 128
+# The size which all images will be resized - (height, width)
 img_size: (64, 1024)
 
-# Character Set - String including all characters to be represented in the network ( charset: abcdef1234...)
-#                 If no characters are specified, the default is used.
+# String including the character set for the model (charset: abcd1234) If no characters are specified, the default is used.
 charset:
 # Whether or not to print examples to the console that contains predictions (using bp and wbs) and ground-truth labels
 show_predictions: True
 
+# Non-Punctuation character set (wbs_word_charset: 'abcdefABCDEF'). If not characters are specified, the default is used.
+wbs_word_charset:
 # WordBeamSearch parameters
 wbs_beam_width: 25
-# Either 'mac' or 'linux'
+# Operating System Type: ['mac', 'linux']
 wbs_os_type: mac
 # Whether or not to include 'GPU' support for WBS Custom OP
 wbs_gpu: False
