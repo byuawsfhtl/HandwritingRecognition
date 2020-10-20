@@ -80,7 +80,6 @@ def test(args):
     # Corpus creation. Currently, this is a manual process of loading in specific dictionaries. Enhancements will be
     # added later to allow for custom dictionaries to be loaded.
     corpus = DictionaryLoader.french_words(include_cased=True)
-        #+ '\n' + DictionaryLoader.ascii_names(include_cased=True)
 
     # Create the word beam search decoder
     wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, words_charset,
