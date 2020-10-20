@@ -2,9 +2,8 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from hwr.model import Recognizer
 from hwr.metrics import ErrorRates
-from hwr.util import model_inference
+from hwr.util import model_inference_bp
 from hwr.wbs.decoder import WordBeamSearch
 
 import hwr.dataset as ds
@@ -12,19 +11,18 @@ import hwr.dataset as ds
 
 class ModelTrainer:
     """
-    Train
-
     Responsible for training the model. Scope becomes an issue when dealing with @tf.function.
     It's easier to place all of the training code into an object so we don't run into issues.
     Once the object is created, the __call__ method will train and return the results and the trained model.
     """
 
-    def __init__(self, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
-                 model_out, model_in=None, lr=4e-4, max_seq_size=128, save_every=5):
+    def __init__(self, model, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
+                 model_out, lr=4e-4, max_seq_size=128, save_every=5):
         """
         Set up necessary variables that will be used during training, including the model, optimizer,
         encoder, and other metrics.
 
+        :param model: The recognition model
         :param epochs: Number of epochs to train the model
         :param batch_size: How many images are in a mini-batch during training
         :param train_dataset: Train Dataset that is mapped and batched (see train_model function for context)
@@ -32,11 +30,11 @@ class ModelTrainer:
         :param val_dataset: Validation Dataset that is mapped and batched (see train_model function for context)
         :param val_dataset_size: The number of images in the validation set
         :param model_out: The path to the location where the weights will be stored during and after training
-        :param model_in: The path to the weights of a pre-trained model that will be applied to the model prior to train
         :param lr: The learning rate of the model
         :param max_seq_size: The maximum length of a line-level transcription (See Encoder for context)
         :param save_every: The frequency which the model weights will be saved during training
         """
+        self.model = model
         self.epochs = epochs
         self.batch_size = batch_size
         self.train_dataset = train_dataset
@@ -45,13 +43,7 @@ class ModelTrainer:
         self.val_dataset_size = val_dataset_size
         self.model_out = model_out
         self.save_every = save_every
-
-        self.model = Recognizer()
-        if model_in is not None:  # Load the model weights before training - useful for fine-tuning
-            self.model.load_weights(model_in)
-
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
-
         self.max_seq_size = max_seq_size
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
         self.val_loss = tf.keras.metrics.Mean(name='val_loss')
@@ -165,15 +157,15 @@ class ModelTrainer:
 
                 # Save the model weights to the specified path
                 if epoch % self.save_every == self.save_every - 1:
-                    print('Saving Model Weights to', self.model_out)
+                    tf.print('Saving Model Weights to', self.model_out)
                     self.model.save_weights(self.model_out)
 
         except Exception as e:
             print("Error: {0}".format(e))
         finally:
             # Save the model weights one last time and return the model/losses
-            print('Finished Training')
-            print('Saving Model Weights to', self.model_out)
+            tf.print('Finished Training')
+            tf.print('Saving Model Weights to', self.model_out)
             self.model.save_weights(self.model_out)
             return self.model, (train_losses, val_losses)
 
@@ -212,7 +204,7 @@ class ModelMetrics:
         all_inferences = []
         all_labels = []
         for images, labels in self.dataset:
-            output = model_inference(self.model, images)
+            output = model_inference_bp(self.model, images)
             predictions = tf.argmax(output, axis=2)  # Best Path
 
             str_predictions = ds.idxs_to_str_batch(predictions, self.idx2char, merge_repeated=True)

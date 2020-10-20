@@ -8,11 +8,13 @@ This project can be used by cloning the repository and running manually. However
 [Anaconda Cloud](https://anaconda.org/BYU-Handwriting-Lab/hwr) and can be used in any Conda environment.
 
 ## Dependencies
-* TensorFlow 2.x
 * Python 3.x
+* TensorFlow 2.x
 * Numpy
+* Pyyaml
 * Pandas
 * Matplotlib
+* Tqdm
 * EditDistance
 
 A .yaml file has been included that specifies the necessary dependencies. A conda environment can be
@@ -23,7 +25,8 @@ conda env create -f environment.yaml
 conda activate hwr_env
 ```
 
-If you are running on MacOS, you must use the MacOS-specific environment file:
+If you are running on MacOS, you must use the MacOS-specific environment file: (This is due to the
+fact that Tensorflow does not support GPU/Cuda for MacOS)
 ```
 conda env create -f environment_macos.yaml
 conda activate hwr_env
@@ -31,7 +34,8 @@ conda activate hwr_env
 
 ## Usage With Provided Scripts
 
-Using the actual codebase, you have access to the ```train.py``` and ```inference.py``` scripts.
+Using the code available in this repository, you have access to the ```train.py```, ```inference.py```,
+and ```test.py``` scripts.
 
 ### Training
 
@@ -49,21 +53,25 @@ The train configuration file contains all the settings needed to run handwriting
 your own model, simply modify the configuration file arguments. Explanations of the arguments are given below:
 
 Configuration File Arguments:
-* csv_path: The path to a tab-delimited CSV file containing | IMG_PATH | TRANSCRIPTION | 
-  (Note that the IMG_PATH given in the CSV is relative to the location of the CSV)
+* train_csv_path: The path to a tab-delimited CSV file containing training data information formatted as:
+                  | IMG_PATH | Transcription |
+* val_csv_path: The path to a tab_delimited CSV file containing validation data information formatted as:
+                  | IMG_PATH | Transcription |     This field may be left blank if Split Train is set to True.
+* split_train_size: The ratio used to determine the size of the train/validation split. If split_train_size is set
+                    to 0.8, then the training set will contain 80% of the data, and validation 20%. The dataset is
+                    not shuffled before being split. If a val_csv_path is given, this parameter will not be used.
+                    Otherwise, the training set will be split using this parameter.
 * model_out: The path to store the trained model weights after training
 * model_in: The path to pre-trained model weights to be loaded before training begins
+* save_every: The frequency in epochs which the model weights will be saved during training
 * epochs: The number of epochs to train
 * batch_size: The number of images in a mini-batch
 * learning_rate: The learning rate the optimizer uses during training
 * max_seq_size: The max number of characters in a line-level transcription
 * img_size: The size which all images will be resized for training
-* split_train: Whether or not to split the training set into a train/validation using the train_size parameter.
-               Train = train_size, Val = (1 - train_size)
-* train_size: The ratio used to determine the size of the train/validation split.
-              Used ONLY if split_train is set to True
 * show_graphs: Whether or not to show graphs of the loss after training
-* metrics: Whether or not to include metrics other than loss on the validation set
+* charset: String including all characters to be represented in the network (abcdef1234...)
+           If no characters are specified, the default is used.
 
 Training Example:
 * A few example images as well as a labels.csv file is included for reference in training and performing inference.
@@ -71,11 +79,13 @@ Training Example:
 * Immediately after cloning this repository, you should be able to use the train.py script along with its
   train_config.yaml file to perform training. The model weights will be stored under
   data/model_weights/example_model/run1. You'll notice this as the *model_in* parameter in the inference_config file.
-* Simply run the following commands:
+* Please not that this example data is meant to show usage for the system. It is by no means sufficient to actually
+  train a recognition model.
+* To use the example parameters, simply run the following command with the original ```train_config.yaml``` file:
 
-```
-python train.py train_config.yaml
-```
+    ```
+    python train.py train_config.yaml
+    ```
 
 ### Inference
 
@@ -84,6 +94,9 @@ Inference can be run using the following command:
 ```
 python inference.py <INFERENCE_CONFIG_FILE>
 ```
+
+The purpose of the ```inference.py``` script is to perform inference on a directory of text line images. The output
+of the ```inference.py``` script will be a csv containing | IMG_PATH | PREDICTED_TRANSCRIPTION | 
 
 Command Line Arguments:
 * INFERENCE_CONFIG_FILE (required): The path to the inference configuration file. An inference configuration
@@ -95,6 +108,13 @@ Configuration File Arguments:
 * model_in: The path to the pre-trained model weights to be used during inference
 * img_size: The size which all images will be resized/padded for inference on the model
 * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
+* charset: String including all characters to be represented in the network (abcdef1234...)
+           If no characters are specified, the default is used.
+      
+* wbs_beam_width: The beam width needed for the word beam search algorithm
+* wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
+* wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
+* wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
 
 
 Inference Example:
@@ -105,9 +125,51 @@ Inference Example:
 * After running the train.py script as specified above, you can perform inference on the example test images by
   running the following command:
   
+    ```
+    python inference.py inference_config.yaml
+    ```
+  
+### Test
+
+Model testing can be done using the following command:
+
 ```
-python inference.py inference_config.yaml
-```
+python test.py <TEST_CONFIG_FILE>
+``` 
+
+The purpose of the ```test.py``` script is to get an idea of how a trained model is
+performing. By running ```test.py```, you can receive Character/Word Error Rates for
+Best-Path/Word-Beam-Search decoding algorithms as well as prediction examples for
+qualitative analysis.
+
+Command Line Arguments:
+* TEST_CONFIG_FILE: The path to the test configuration file. A test configuration file
+  is provided as "test_config.yaml".
+
+Command Line Arguments:
+* csv_path: The path to the csv file
+* dataset_eval_size: How much of the dataset should be used when testing and acquiring error rates. Float between 0-1.
+* batch_size: The number of images to be used in a batch
+* max_seq_size: The max number of characters in a line-level transcription
+* charset: String including all characters to be represented in the network (abcdef1234...)
+           If no characters are specified, the default is used.
+* show_predictions: Boolean indicating whether or not to print the bp/wbs predictions along with label
+* wbs_beam_width: The beam width needed for the word beam search algorithm
+* wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
+* wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
+* wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
+
+Test Example:
+* We can use the same images/labels.csv files as are used for training to test the model. This data is included in the
+  data/example folder
+* After running the training script, the model weights will be stored according to the model_out parameter
+  in the train_config file, data/model_weights/example_model/run1. We can use the weights of this trained model to
+  run our test script. In the example test_config file, this path is already specified.
+* To run this example you can use the provided config file:
+
+    ```
+    python test.py test_config.yaml
+    ```
 
 ## Usage With Conda Package
 

@@ -1,7 +1,5 @@
 import sys
-import time
 
-import tensorflow as tf
 import numpy as np
 import yaml
 from tqdm import tqdm
@@ -15,6 +13,7 @@ from hwr.wbs.decoder import WordBeamSearch
 
 
 CSV_PATH = 'csv_path'
+DATASET_EVAL_SIZE = 'dataset_eval_size'
 MODEL_IN = 'model_in'
 BATCH_SIZE = 'batch_size'
 MAX_SEQ_SIZE = 'max_seq_size'
@@ -22,6 +21,7 @@ IMG_SIZE = 'img_size'
 CHARSET = 'charset'
 SHOW_PREDICTIONS = 'show_predictions'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
+WBS_WORD_CHARSET = 'wbs_word_charset'
 WBS_OS_TYPE = 'wbs_os_type'
 WBS_GPU = 'wbs_gpu'
 WBS_MULTITHREADED = 'wbs_multithreaded'
@@ -40,39 +40,58 @@ def test(args):
 
     Command Line Arguments:
     * csv_path: The path to the csv file
+    * dataset_eval_size: How much of the dataset should be used when testing and acquiring error rates. Float between 0-1.
     * batch_size: The number of images to be used in a batch
+    * max_seq_size: The max number of characters in a line-level transcription
     * charset: String including all characters to be represented in the network (abcdef1234...)
                If no characters are specified, the default is used.
+    * show_predictions: Boolean indicating whether or not to print the bp/wbs predictions along with label
+    * wbs_beam_width: The beam width needed for the word beam search algorithm
+    * wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
+    * wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
+    * wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
     """
     # Ensure the train config file is included
     if len(args) == 0:
-        print('Must include path to train config file. The default file is included as "train_config.yaml.')
+        print('Must include path to test config file. The default file is included as "test_config.yaml.')
         return
 
     # Read arguments from the config file:
     with open(args[0]) as f:
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
-    charset = configs[CHARSET] if not str(configs[CHARSET]) else None  # If no charset is given pass None to use default
+    charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
+    words_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
     char2idx = ds.get_char2idx(charset=charset)
     idx2char = ds.get_idx2char(charset=charset)
 
+    dataset_size = ds.get_dataset_size(configs[CSV_PATH])
     dataset = ds.get_encoded_dataset_from_csv(configs[CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                               eval(configs[IMG_SIZE]))\
+        .skip(int(dataset_size * (1 - configs[DATASET_EVAL_SIZE])))\
         .batch(configs[BATCH_SIZE])
-    dataset_size = ds.get_dataset_size(configs[CSV_PATH])
+    # Recalculate dataset size after skipping part of the dataset as specified by dataset_eval_size parameter
+    dataset_size = dataset_size - int(dataset_size * (1 - configs[DATASET_EVAL_SIZE]))
 
-    model = Recognizer()  # Plus the ctc-blank character
+    # Create the recognition model and load the pre-trained weights
+    model = Recognizer(vocabulary_size=len(charset) + 1)  # Plus the ctc-blank character
     model.load_weights(configs[MODEL_IN])
 
-    wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, DictionaryLoader.census_names_15(include_cased=True),
-                         ds.DEFAULT_CHARS, ds.DEFAULT_NON_PUNCTUATION, os_type=configs[WBS_OS_TYPE],
-                         gpu=configs[WBS_GPU], multithreaded=configs[WBS_MULTITHREADED])
+    # Corpus creation. Currently, this is a manual process of loading in specific dictionaries. Enhancements will be
+    # added later to allow for custom dictionaries to be loaded.
+    corpus = DictionaryLoader.english_words(include_cased=True) + '\n' +\
+        DictionaryLoader.ascii_names(include_cased=True)
 
+    # Create the word beam search decoder
+    wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, words_charset,
+                         os_type=configs[WBS_OS_TYPE], gpu=configs[WBS_GPU], multithreaded=configs[WBS_MULTITHREADED])
+
+    # Create lists to store labels and predictions for various decoding methods
     bp_predictions = []
     wbs_predictions = []
     actual_labels = []
 
+    # Main inference loop iterating over the test dataset
     loop = tqdm(total=int(np.round(dataset_size/configs[BATCH_SIZE])), position=0, leave=True)
     for images, labels in dataset:
         # Run inference on the model
@@ -90,7 +109,9 @@ def test(args):
         str_labels = ds.idxs_to_str_batch(labels, idx2char, merge_repeated=False)
         actual_labels.extend(bytes_to_unicode(str_labels))
         loop.update(1)
+    loop.close()
 
+    # Calculate error rates by iterating over the predictions/labels
     bp_rates = ErrorRates()
     wbs_rates = ErrorRates()
     for bp_pred, wbs_pred, y_true in zip(bp_predictions, wbs_predictions, actual_labels):
@@ -104,6 +125,7 @@ def test(args):
     bp_cer, bp_wer = bp_rates.get_error_rates()
     wbs_cer, wbs_wer = wbs_rates.get_error_rates()
 
+    # Print the error rates to the console
     print('Best Path - Character Error Rate: {:.4f}%'.format(bp_cer * 100))
     print('Best Path - Word Error Rate: {:.4f}%'.format(bp_wer * 100))
     print('Word Beam Search - Character Error Rate: {:.4f}%'.format(wbs_cer * 100))
@@ -112,7 +134,11 @@ def test(args):
 
 def bytes_to_unicode(byte_string_tensor):
     """
-    Takes a tensor of byte strings and converts them to a regular python list of unicode strings
+    Takes a tensor of byte strings and converts them to a regular python list of unicode strings.
+    This is useful when string tensors need to be converted for error rate calculations.
+
+    :param: byte_string_tensor: A tensor of byte strings
+    :return: A python list of strings
     """
     return [s.decode('utf8') if type(s) == np.bytes_ or type(s) == bytes else s
             for s in byte_string_tensor.numpy()]

@@ -4,8 +4,27 @@ from hwr.wbs.loader import FilePaths
 
 
 class WordBeamSearch:
+    """
+    Wrapper class for using the Word Beam Search algorithm through a pre-built tensorflow custom operation.
+    Tensorflow custom ops are useful because they allow the decoding to take place in Graph Mode. However, they
+    are only supported in Linux/MacOS.
+
+    See CTC-Word-Beam-Search GitHub Readme for more details:
+    https://github.com/githubharald/CTCWordBeamSearch
+    """
     def __init__(self, beam_width, lm_type, lm_smoothing, corpus, chars, word_chars, os_type='linux', gpu=True,
                  multithreaded=False):
+        """
+        :param beam_width: The beam width used in the word beam search algorithm
+        :param lm_type: The language model type. Most often will use 'Words'. See WBS documentation for more details.
+        :param lm_smoothing: Float representing language model smoothing. See WBS documentation for more details.
+        :param corpus: String with space delimited words representing the possible words for decoding
+        :param chars: String containing all possible characters used in model
+        :param word_chars: String containing all non-punctuation characters
+        :param os_type: The operating system type: ['linux', 'mac'] Windows is not supported.
+        :param gpu: Boolean indicating whether or not the system supports GPU/Cuda
+        :param multithreaded: Whether or not to use 8 parallel threads during decoding operation.
+        """
         self.num_chars = len(chars)
         self.beam_width = beam_width
         self.lm_type = lm_type
@@ -14,7 +33,7 @@ class WordBeamSearch:
         self.chars = chars.encode('utf8')
         self.word_chars = word_chars.encode('utf8')
 
-        assert os_type in ['linux', 'mac']  #
+        assert os_type in ['linux', 'mac']  # Windows not supported
 
         if os_type == 'linux' and gpu and multithreaded:
             op_path = FilePaths.wbs_linux_gpu_parallel_8()

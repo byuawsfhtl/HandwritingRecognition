@@ -4,11 +4,9 @@
 train_csv_path: ./data/example/labels.csv
 # The path to a tab-delimited CSV file containing validation data information formatted as | IMG_PATH | Transcription |
 val_csv_path:
-# Whether or not to split the training set into a train/validation using the train_size parameter. Train = train_size, Val = (1 - train_size)
-split_train: True
-# The ratio used to determine the size of the train/validation split. Used ONLY if split_train is set to True
-train_size: 0.8
-
+# The ratio used to determine the size of the train/validation split. If split_train_size is set to 0.8, then the
+# training set will contain 80% of the data, and validation 20%. The dataset is not shuffled before being split.
+split_train_size: 0.8
 
 # The path to store the trained model weights
 model_out: ./data/model_weights/example_model/run1
@@ -30,6 +28,5 @@ img_size: (64, 1024)
 
 # Whether or not to show graphs of the loss after training
 show_graphs: False  # Make sure True/False booleans are capitalized!
-# Character Set - String including all characters to be represented in the network ( charset: abcdef1234...)
-#                 If no characters are specified, the default is used.
+# String including the character set for the model (charset: abcd1234) If no characters are specified, the default is used.
 charset:

@@ -33,7 +33,7 @@ class ErrorRates:
         self.count += 1
 
     def get_error_rates(self):
-        return self.cer_total_error / self.count, self.wer_total_error / self.count
+        return (self.cer_total_error / self.count, self.wer_total_error / self.count) if self.count > 0 else (1.0, 1.0)
 
     def __call__(self, y_true, y_pred):
         self.update(y_true, y_pred)
