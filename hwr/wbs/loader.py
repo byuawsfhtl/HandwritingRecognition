@@ -135,7 +135,7 @@ class DictionaryLoader:
     @staticmethod
     def french_words(include_cased=False):
         """
-        List of XXXXX french words.
+        List of 80,060 french words targeted towards death records.
         :param include_cased: True indicating a desire to add both the lower-cased and capitalized word or False to only
                             include the word as given in the list.
         :return: String of French words separated by newline
