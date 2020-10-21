@@ -19,5 +19,5 @@ setup(
     package_data={
         'hwr': 'wbs/data/*'
     },
-    install_requires=['tensorflow', 'pandas', 'matplotlib', 'pyyaml', 'numpy', 'editdistance', 'tqdm']
+    install_requires=['tensorflow-gpu', 'pandas', 'matplotlib', 'pyyaml', 'numpy', 'editdistance', 'tqdm']
 )
