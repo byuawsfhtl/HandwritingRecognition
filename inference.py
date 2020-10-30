@@ -81,8 +81,10 @@ def inference(args):
     corpus = DictionaryLoader.ascii_names(include_cased=True) + '\n' +\
         DictionaryLoader.english_words(include_cased=True)
 
-    wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, word_charset,
-                         os_type=configs[WBS_OS_TYPE], gpu=configs[WBS_GPU], multithreaded=configs[WBS_MULTITHREADED])
+    if configs[USE_WBS]:
+        wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, word_charset,
+                             os_type=configs[WBS_OS_TYPE], gpu=configs[WBS_GPU],
+                             multithreaded=configs[WBS_MULTITHREADED])
 
     # Keep track of all inferences in list of tuples
     inferences = []
