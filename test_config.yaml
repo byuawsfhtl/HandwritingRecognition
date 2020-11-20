@@ -1,7 +1,11 @@
 # The path to a tab-delimited CSV file containing training data information formatted as | IMG_PATH | Transcription |
 csv_path: ./data/example/labels.csv
 # How much of the dataset should be used when testing and acquiring error rates
-dataset_eval_size: 1.0
+dataset_eval_size: 0.005
+# Specify the recognition architecture. Available: ['flor', 'gtr']
+recognition_architecture: flor
+# If using the gtr architecture, you can specify the number of filters here for each gateblock
+gateblock_filters: 512
 # The path to the pre-trained model weights
 model_in: ./data/model_weights/example_model/run1
 # The number of images in a mini-batch
@@ -23,6 +27,6 @@ wbs_beam_width: 25
 # Operating System Type: ['mac', 'linux']
 wbs_os_type: mac
 # Whether or not to include 'GPU' support for WBS Custom OP
-wbs_gpu: False
+wbs_gpu: True
 # Whether or not to use 8 threads when decoding model output matrix
-wbs_multithreaded: False
+wbs_multithreaded: True

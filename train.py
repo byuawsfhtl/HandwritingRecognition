@@ -3,13 +3,14 @@ import sys
 import matplotlib.pyplot as plt
 import yaml
 
-from hwr.model import Recognizer
 import hwr.dataset as ds
+from hwr.models import FlorRecognizer, GTRRecognizer
 from hwr.training import ModelTrainer
 
 TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
 SPLIT_TRAIN_SIZE = 'split_train_size'
+RECOGNITION_ARCHITECTURE = 'recognition_architecture'
 MODEL_OUT = 'model_out'
 MODEL_IN = 'model_in'
 EPOCHS = 'epochs'
@@ -94,15 +95,23 @@ def train_model(args):
         val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                       eval(configs[IMG_SIZE])).batch(configs[BATCH_SIZE])
 
-    # Create the model and load any given pre-trained weights
-    model = Recognizer(vocabulary_size=len(charset) + 1)
+    if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
+        model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
+                              sequence_size=configs[MAX_SEQ_SIZE],
+                              vocabulary_size=len(charset) + 1, gateblock_filters=128, avg_pool_height=4)
+    elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
+        model = FlorRecognizer(vocabulary_size=len(charset) + 1)
+    else:
+        raise Exception('Unsupported recognition architecture: {}. Please choose a supported architecture: {}.'.format(
+            configs[RECOGNITION_ARCHITECTURE], '["flor", "gtr"]'))
+
     if configs[MODEL_IN]:
         model.load_weights(configs[MODEL_IN])
 
     # Train the model
     model_trainer = ModelTrainer(model, configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size,
-                                 val_dataset, val_dataset_size, configs[MODEL_OUT], lr=configs[LEARNING_RATE], max_seq_size=configs[MAX_SEQ_SIZE],
-                                 save_every=configs[SAVE_EVERY])
+                                 val_dataset, val_dataset_size, configs[MODEL_OUT], lr=configs[LEARNING_RATE],
+                                 max_seq_size=configs[MAX_SEQ_SIZE], save_every=configs[SAVE_EVERY])
     model, losses = model_trainer.train()
 
     # Print the losses over the course of training

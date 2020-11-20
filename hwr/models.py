@@ -1,47 +1,13 @@
 import tensorflow as tf
 import tensorflow.keras.layers as kl
 import tensorflow.keras.constraints as kc
+import numpy as np
+
+from hwr.layers import FullGatedConv2D
+from hwr.layers import GateBlock
 
 
-class FullGatedConv2D(kl.Conv2D):
-    """
-    Gated Convolutional Layer as described in the paper, Gated Convolutional Recurrent Neural Networks for Multilingual
-    Handwriting Recognition (https://ieeexplore-ieee-org.erl.lib.byu.edu/document/8270042). Code obtained from the Flor
-    implementation ()
-    """
-
-    def __init__(self, filters, **kwargs):
-        """
-        :param filters: The number of filters to be used for the convolution
-        :param kwargs: Additional kwargs to be passed to Conv2D
-        """
-        super(FullGatedConv2D, self).__init__(filters=filters * 2, **kwargs)
-        self.nb_filters = filters
-
-    def call(self, inputs):
-        """
-        Forward pass of gated convolutional layer
-
-        :param inputs: The input to the gated convolution as tensor
-        :return: The output of the gated convolution as tensor
-        """
-        output = super(FullGatedConv2D, self).call(inputs)
-        linear = kl.Activation("linear")(output[:, :, :, :self.nb_filters])
-        sigmoid = kl.Activation("sigmoid")(output[:, :, :, self.nb_filters:])
-        return kl.Multiply()([linear, sigmoid])
-
-    def compute_output_shape(self, input_shape):
-        output_shape = super(FullGatedConv2D, self).compute_output_shape(input_shape)
-        return tuple(output_shape[:3]) + (self.nb_filters,)
-
-    def get_config(self):
-        config = super(FullGatedConv2D, self).get_config()
-        config['nb_filters'] = self.nb_filters
-        del config['filters']
-        return config
-
-
-class Recognizer(tf.keras.Model):
+class FlorRecognizer(tf.keras.Model):
     """
     Handwriting Recognition Model as described in the Blog Post,
     https://medium.com/@arthurflor23/handwritten-text-recognition-using-tensorflow-2-0-f4352b7afe16.
@@ -55,8 +21,9 @@ class Recognizer(tf.keras.Model):
 
         :param vocabulary_size: The number of possible classes that a character could belong to
         """
-        super(Recognizer, self).__init__(name='flor_recognizer')
+        super(FlorRecognizer, self).__init__(name='flor_recognizer')
 
+        self.permute = kl.Permute([2, 1, 3])
         self.conv1 = tf.keras.Sequential(name='conv1')
         self.conv1.add(
             kl.Conv2D(filters=16, kernel_size=(3, 3), strides=(2, 2), padding="same", kernel_initializer="he_uniform"))
@@ -125,8 +92,9 @@ class Recognizer(tf.keras.Model):
         :param kwargs: Additional parameters
         :return:
         """
+        out = self.permute(x)
         # CNN
-        out = self.conv1(x)
+        out = self.conv1(out)
         out = self.conv2(out)
         out = self.conv3(out)
         out = self.dropout1(out, training=training)
@@ -144,5 +112,71 @@ class Recognizer(tf.keras.Model):
         # RNN
         out = self.gru1(out)
         out = self.gru2(out)
+
+        return out
+
+
+class GTRRecognizer(tf.keras.Model):
+    def __init__(self, height, width, sequence_size=128, vocabulary_size=197, avg_pool_height=8, num_gateblocks='auto',
+                 gateblock_filters=512, **kwargs):
+        super(GTRRecognizer, self).__init__(**kwargs)
+
+        self.ln1 = kl.LayerNormalization(trainable=False)
+        self.conv1 = kl.Conv2D(16, kernel_size=(1, 1), padding='same')
+        self.bn1 = kl.BatchNormalization(renorm=True)
+        self.softmax1 = kl.Softmax()
+        self.conv2 = kl.DepthwiseConv2D(kernel_size=(13, 13), padding='same')
+        self.bn2 = kl.BatchNormalization(renorm=True)
+        self.drop1 = kl.SpatialDropout2D(0.75)
+        self.ln2 = kl.LayerNormalization(trainable=False)
+
+        mp_heights = int(np.log2(height) - np.log2(avg_pool_height))
+        mp_widths = int(np.log2(width) - np.log2(sequence_size))
+
+        min_gateblocks = max(mp_heights, mp_widths)
+
+        if num_gateblocks == 'auto':
+            num_gateblocks = min_gateblocks
+
+        if num_gateblocks < min_gateblocks:
+            raise Exception("Recognizer requires a minimum of {} gateblocks with the specified configuration".format(
+                min_gateblocks))
+
+        self.gateblocks = tf.keras.Sequential()
+        for index in range(num_gateblocks):
+            height = 2 if mp_heights > 0 else 1
+            width = 2 if mp_widths > 0 else 1
+            mp_heights -= 1
+            mp_widths -= 1
+            self.gateblocks.add(GateBlock(gateblock_filters, pool_size=(height, width)))
+
+        self.ln3 = kl.LayerNormalization(trainable=False)
+        self.drop2 = kl.SpatialDropout2D(0.5)
+        self.conv3 = kl.Conv2D(vocabulary_size, kernel_size=(1, 1), padding='same')
+        self.bn3 = kl.BatchNormalization(renorm=True)
+        self.elu1 = kl.ELU()
+        self.ap1 = kl.AveragePooling2D(pool_size=(avg_pool_height, 1))
+        self.ln4 = kl.LayerNormalization(trainable=False)
+
+    def call(self, x, training=False, **kwargs):
+        out = self.ln1(x)
+        out = self.conv1(out)
+        out = self.bn1(out)
+        out = self.softmax1(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.drop1(out)
+        out = self.ln2(out)
+        out = tf.concat((x, out), 3)
+
+        out = self.gateblocks(out)
+        out = self.ln3(out)
+        out = self.drop2(out)
+        out = self.conv3(out)
+        out = self.bn3(out)
+        out = self.elu1(out)
+        out = self.ap1(out)
+        out = tf.squeeze(out, 1)
+        out = self.ln4(out)
 
         return out

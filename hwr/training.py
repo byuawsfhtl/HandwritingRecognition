@@ -25,9 +25,9 @@ class ModelTrainer:
         :param model: The recognition model
         :param epochs: Number of epochs to train the model
         :param batch_size: How many images are in a mini-batch during training
-        :param train_dataset: Train Dataset that is mapped and batched (see train_model function for context)
+        :param train_dataset: Train Dataset that is mapped and batched (see train method for context)
         :param train_dataset_size: The number of images in the training set
-        :param val_dataset: Validation Dataset that is mapped and batched (see train_model function for context)
+        :param val_dataset: Validation Dataset that is mapped and batched (see train method for context)
         :param val_dataset_size: The number of images in the validation set
         :param model_out: The path to the location where the weights will be stored during and after training
         :param lr: The learning rate of the model

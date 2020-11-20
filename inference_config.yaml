@@ -4,12 +4,18 @@
 img_path: ./data/example/test_images
 # The output path to the results of the inference
 out_path: ./data/example/iam_inference.csv
+# Specify the recognition architecture. Available: ['flor', 'gtr']
+recognition_architecture: flor
+# If using the gtr architecture, you can specify the number of filters here for each gateblock
+gateblock_filters: 512
 # The path to the pre-trained model weights to be used during inference
 model_in: ./data/model_weights/example_model/run1
 # The size which all images will be resized/padded for inference on the model
 img_size: (64, 1024)
 # The batch size to be used when performing inference on the model (how many images will be inferred at once)
 batch_size: 32
+# The max number of characters in a line-level transcription
+max_seq_size: 128
 # Whether or not to print the inference results to the console and show images - Useful for debugging
 console_out: False
 # String including the character set for the model (charset: abcd1234) If no characters are specified, the default is used.

@@ -6,16 +6,18 @@ import yaml
 from tqdm import tqdm
 
 import hwr.dataset as ds
-from hwr.model import Recognizer
+from hwr.models import FlorRecognizer, GTRRecognizer
 from hwr.util import model_inference_bp, model_inference_wbs
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
 
 IMG_PATH = 'img_path'
 OUT_PATH = 'out_path'
+RECOGNITION_ARCHITECTURE = 'recognition_architecture'
 MODEL_IN = 'model_in'
 IMG_SIZE = 'img_size'
 BATCH_SIZE = 'batch_size'
+MAX_SEQ_SIZE = 'max_seq_size'
 CONSOLE_OUT = 'console_out'
 CHARSET = 'charset'
 
@@ -71,8 +73,16 @@ def inference(args):
     word_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
     idx2char = ds.get_idx2char(charset=charset)
 
-    # Create the model object and load the pre-trained model weights
-    model = Recognizer(vocabulary_size=len(charset) + 1)  # +1 for the CTC-blank character
+    if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
+        model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
+                              sequence_size=configs[MAX_SEQ_SIZE],
+                              vocabulary_size=len(charset) + 1, gateblock_filters=128, avg_pool_height=4)
+    elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
+        model = FlorRecognizer(vocabulary_size=len(charset) + 1)
+    else:
+        raise Exception('Unsupported recognition architecture: {}. Please choose a supported architecture: {}.'.format(
+            configs[RECOGNITION_ARCHITECTURE], '["flor", "gtr"]'))
+
     if configs[MODEL_IN]:
         model.load_weights(configs[MODEL_IN])
 

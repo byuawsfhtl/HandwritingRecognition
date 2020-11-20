@@ -5,8 +5,8 @@ import yaml
 from tqdm import tqdm
 
 import hwr.dataset as ds
-from hwr.model import Recognizer
 from hwr.metrics import ErrorRates
+from hwr.models import FlorRecognizer, GTRRecognizer
 from hwr.util import model_inference_bp_wbs
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
@@ -14,6 +14,7 @@ from hwr.wbs.decoder import WordBeamSearch
 
 CSV_PATH = 'csv_path'
 DATASET_EVAL_SIZE = 'dataset_eval_size'
+RECOGNITION_ARCHITECTURE = 'recognition_architecture'
 MODEL_IN = 'model_in'
 BATCH_SIZE = 'batch_size'
 MAX_SEQ_SIZE = 'max_seq_size'
@@ -73,13 +74,22 @@ def test(args):
     # Recalculate dataset size after skipping part of the dataset as specified by dataset_eval_size parameter
     dataset_size = dataset_size - int(dataset_size * (1 - configs[DATASET_EVAL_SIZE]))
 
-    # Create the recognition model and load the pre-trained weights
-    model = Recognizer(vocabulary_size=len(charset) + 1)  # Plus the ctc-blank character
-    model.load_weights(configs[MODEL_IN])
+    if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
+        model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
+                              sequence_size=configs[MAX_SEQ_SIZE],
+                              vocabulary_size=len(charset) + 1, gateblock_filters=128, avg_pool_height=4)
+    elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
+        model = FlorRecognizer(vocabulary_size=len(charset) + 1)
+    else:
+        raise Exception('Unsupported recognition architecture: {}. Please choose a supported architecture: {}.'.format(
+            configs[RECOGNITION_ARCHITECTURE], '["flor", "gtr"]'))
+
+    if configs[MODEL_IN]:
+        model.load_weights(configs[MODEL_IN])
 
     # Corpus creation. Currently, this is a manual process of loading in specific dictionaries. Enhancements will be
     # added later to allow for custom dictionaries to be loaded.
-    corpus = DictionaryLoader.english_words(True) + '\n' + DictionaryLoader.ascii_names(True)
+    corpus = DictionaryLoader.french_words(include_cased=True)
 
     # Create the word beam search decoder
     wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, words_charset,
