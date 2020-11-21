@@ -101,7 +101,7 @@ def test(args):
     actual_labels = []
 
     # Main inference loop iterating over the test dataset
-    loop = tqdm(total=int(np.round(dataset_size/configs[BATCH_SIZE])), position=0, leave=True)
+    loop = tqdm(total=int(dataset_size/configs[BATCH_SIZE]), position=0, leave=True)
     for images, labels in dataset:
         # Run inference on the model
         bp_prediction, wbs_prediction = model_inference_bp_wbs(model, images, wbs)
