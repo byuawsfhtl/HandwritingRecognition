@@ -133,7 +133,7 @@ class ModelTrainer:
                 self.val_loss.reset_states()
 
                 # Train Loop
-                train_loop = tqdm(total=self.train_dataset_size // self.batch_size, position=0, leave=True)
+                train_loop = tqdm(total=int(self.train_dataset_size / self.batch_size), position=0, leave=True)
                 for images, labels in self.train_dataset:
                     # Take a train step and update our progress bar
                     self.train_step(images, labels)
@@ -143,7 +143,7 @@ class ModelTrainer:
                 train_loop.close()
 
                 # Validation Loop
-                val_loop = tqdm(total=self.val_dataset_size // self.batch_size, position=0, leave=True)
+                val_loop = tqdm(total=int(self.val_dataset_size / self.batch_size), position=0, leave=True)
                 for images, labels in self.val_dataset:
                     # Take a validation step and update our progress bar
                     self.validation_step(images, labels)
