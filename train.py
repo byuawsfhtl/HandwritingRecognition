@@ -13,7 +13,7 @@ SPLIT_TRAIN_SIZE = 'split_train_size'
 RECOGNITION_ARCHITECTURE = 'recognition_architecture'
 GATEBLOCK_FILTERS = 'gateblock_filters'
 NUM_GATEBLOCKS = 'num_gateblocks'
-AVG_POOL_SIZE = 'avg_pool_size'
+AVG_POOL_HEIGHT = 'avg_pool_height'
 MODEL_OUT = 'model_out'
 MODEL_IN = 'model_in'
 EPOCHS = 'epochs'
@@ -82,10 +82,12 @@ def train_model(args):
         dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                   eval(configs[IMG_SIZE]))
         train_dataset = dataset.take(train_dataset_size)\
-                               .shuffle(100, reshuffle_each_iteration=True)\
-                               .batch(configs[BATCH_SIZE])
+            .cache()\
+            .shuffle(100, reshuffle_each_iteration=True)\
+            .batch(configs[BATCH_SIZE])
         val_dataset = dataset.skip(train_dataset_size)\
-                             .batch(configs[BATCH_SIZE])
+            .cache()\
+            .batch(configs[BATCH_SIZE])
 
     else:  # Use the data as given in the train/validation csv files - no additional splits performed
         train_dataset_size = ds.get_dataset_size(configs[TRAIN_CSV_PATH])
@@ -93,16 +95,19 @@ def train_model(args):
 
         train_dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                         eval(configs[IMG_SIZE]))\
-                          .shuffle(100, reshuffle_each_iteration=True)\
-                          .batch(configs[BATCH_SIZE])
+            .cache()\
+            .shuffle(100, reshuffle_each_iteration=True)\
+            .batch(configs[BATCH_SIZE])
         val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
-                                                      eval(configs[IMG_SIZE])).batch(configs[BATCH_SIZE])
+                                                      eval(configs[IMG_SIZE]))\
+            .cache()\
+            .batch(configs[BATCH_SIZE])
 
     if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
         model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
                               sequence_size=configs[MAX_SEQ_SIZE],
                               vocabulary_size=len(charset) + 1, gateblock_filters=configs[GATEBLOCK_FILTERS],
-                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_SIZE])
+                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_HEIGHT])
     elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
         model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     else:

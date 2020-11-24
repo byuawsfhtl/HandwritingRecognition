@@ -37,7 +37,9 @@ def get_char2idx(charset):
     char2idx = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
             keys=tf.constant(chars, dtype=tf.string),
-            values=tf.constant(indices, dtype=tf.int64)
+            values=tf.constant(indices, dtype=tf.int32),
+            key_dtype=tf.string,
+            value_dtype=tf.int32
         ),
         default_value=0,
         name='char2idx_lookup'
@@ -59,8 +61,10 @@ def get_idx2char(charset):
 
     idx2char = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
-            keys=tf.constant(indices, dtype=tf.int64),
-            values=tf.constant(chars, dtype=tf.string)
+            keys=tf.constant(indices, dtype=tf.int32),
+            values=tf.constant(chars, dtype=tf.string),
+            key_dtype=tf.int32,
+            value_dtype=tf.string
         ),
         default_value='',
         name='idx2char_lookup'
@@ -80,7 +84,7 @@ def pad_or_truncate(t, sequence_size=128):
     dim = tf.size(t)
     return tf.cond(tf.equal(dim, sequence_size), lambda: t,
                    lambda: tf.cond(tf.greater(dim, sequence_size), lambda: tf.slice(t, [0], [sequence_size]),
-                                   lambda: tf.concat([t, tf.zeros(sequence_size - dim, dtype=tf.int64)], 0)))
+                                   lambda: tf.concat([t, tf.zeros(sequence_size - dim, dtype=tf.int32)], 0)))
 
 
 def merge_repeating_values(t):
@@ -107,7 +111,7 @@ def str_to_idxs(string, char2idx, sequence_size):
     :param sequence_size: The final sequence length
     :return: The converted string now in its integer representation
     """
-    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.bytes_split(string), dtype=tf.int64)
+    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.bytes_split(string), dtype=tf.int32)
     return pad_or_truncate(idxs, sequence_size=sequence_size)
 
 
@@ -139,7 +143,7 @@ def str_to_idxs_batch(batch, char2idx, sequence_size=128):
     :return: The converted strings now in its integer representation
     """
     return tf.map_fn(lambda string: str_to_idxs(string, char2idx, sequence_size=sequence_size), batch,
-                     dtype=tf.int64)
+                     dtype=tf.int32)
 
 
 def idxs_to_str_batch(batch, idx2char, merge_repeated=True):
@@ -230,7 +234,8 @@ def get_encoded_dataset_from_csv(csv_path, char2idx, max_seq_size, img_size):
         lambda img_path, transcription: encode_img_and_transcription(
             tf.strings.join([path_prefix, tf.strings.reduce_join(tf.strings.split(img_path, '/'), separator=path_sep)],
                             separator=path_sep),
-            transcription, char2idx, max_seq_size, img_size))
+            transcription, char2idx, max_seq_size, img_size),
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)\
 
 
 def get_encoded_inference_dataset_from_img_path(img_path, img_size):
@@ -243,4 +248,5 @@ def get_encoded_inference_dataset_from_img_path(img_path, img_size):
     :return: The tf dataset containing encoded images and their respective string names
     """
     return tf.data.Dataset.list_files(img_path + '/*', shuffle=False).map(
-        lambda path: encode_img_with_name(path, img_size))
+        lambda path: encode_img_with_name(path, img_size),
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)\

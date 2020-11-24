@@ -16,7 +16,7 @@ OUT_PATH = 'out_path'
 RECOGNITION_ARCHITECTURE = 'recognition_architecture'
 GATEBLOCK_FILTERS = 'gateblock_filters'
 NUM_GATEBLOCKS = 'num_gateblocks'
-AVG_POOL_SIZE = 'avg_pool_size'
+AVG_POOL_HEIGHT = 'avg_pool_height'
 MODEL_IN = 'model_in'
 IMG_SIZE = 'img_size'
 BATCH_SIZE = 'batch_size'
@@ -69,7 +69,7 @@ def inference(args):
 
     # Create the tensorflow dataset with images to be inferred
     dataset = ds.get_encoded_inference_dataset_from_img_path(configs[IMG_PATH], eval(configs[IMG_SIZE]))\
-                .batch(configs[BATCH_SIZE])
+        .batch(configs[BATCH_SIZE])
 
     # Load our character set
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
@@ -80,7 +80,7 @@ def inference(args):
         model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
                               sequence_size=configs[MAX_SEQ_SIZE],
                               vocabulary_size=len(charset) + 1, gateblock_filters=configs[GATEBLOCK_FILTERS],
-                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_SIZE])
+                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_HEIGHT])
     elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
         model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     else:
