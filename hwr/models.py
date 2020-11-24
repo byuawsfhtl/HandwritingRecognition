@@ -118,7 +118,7 @@ class FlorRecognizer(tf.keras.Model):
 
 class GTRRecognizer(tf.keras.Model):
     def __init__(self, height, width, sequence_size=128, vocabulary_size=197, avg_pool_height=8, num_gateblocks='auto',
-                 gateblock_filters=512, **kwargs):
+                 std_gateblock_filters=512, pooling_gateblock_filters=128, **kwargs):
         super(GTRRecognizer, self).__init__(**kwargs)
 
         self.ln1 = kl.LayerNormalization(trainable=False)
@@ -133,22 +133,27 @@ class GTRRecognizer(tf.keras.Model):
         mp_heights = int(np.log2(height) - np.log2(avg_pool_height))
         mp_widths = int(np.log2(width) - np.log2(sequence_size))
 
-        min_gateblocks = max(mp_heights, mp_widths)
+        num_pooling_gateblocks = max(mp_heights, mp_widths)
 
         if num_gateblocks == 'auto':
-            num_gateblocks = min_gateblocks
+            num_gateblocks = num_pooling_gateblocks
 
-        if num_gateblocks < min_gateblocks:
+        if num_gateblocks < num_pooling_gateblocks:
             raise Exception("Recognizer requires a minimum of {} gateblocks with the specified configuration".format(
-                min_gateblocks))
+                num_pooling_gateblocks))
 
         self.gateblocks = tf.keras.Sequential()
-        for index in range(num_gateblocks):
+
+        num_standard_gateblocks = num_gateblocks - num_pooling_gateblocks
+        for index in range(num_standard_gateblocks):
+            self.gateblocks.add(GateBlock(std_gateblock_filters))
+
+        for index in range(num_pooling_gateblocks):
             height = 2 if mp_heights > 0 else 1
             width = 2 if mp_widths > 0 else 1
             mp_heights -= 1
             mp_widths -= 1
-            self.gateblocks.add(GateBlock(gateblock_filters, pool_size=(height, width)))
+            self.gateblocks.add(GateBlock(pooling_gateblock_filters, pool_size=(height, width)))
 
         self.ln3 = kl.LayerNormalization(trainable=False)
         self.drop2 = kl.SpatialDropout2D(0.5)
