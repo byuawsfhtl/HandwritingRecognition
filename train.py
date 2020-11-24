@@ -11,6 +11,9 @@ TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
 SPLIT_TRAIN_SIZE = 'split_train_size'
 RECOGNITION_ARCHITECTURE = 'recognition_architecture'
+GATEBLOCK_FILTERS = 'gateblock_filters'
+NUM_GATEBLOCKS = 'num_gateblocks'
+AVG_POOL_SIZE = 'avg_pool_size'
 MODEL_OUT = 'model_out'
 MODEL_IN = 'model_in'
 EPOCHS = 'epochs'
@@ -98,7 +101,8 @@ def train_model(args):
     if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
         model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
                               sequence_size=configs[MAX_SEQ_SIZE],
-                              vocabulary_size=len(charset) + 1, gateblock_filters=128, avg_pool_height=4)
+                              vocabulary_size=len(charset) + 1, gateblock_filters=configs[GATEBLOCK_FILTERS],
+                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_SIZE])
     elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
         model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     else:

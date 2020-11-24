@@ -8,6 +8,10 @@ out_path: ./data/example/iam_inference.csv
 recognition_architecture: flor
 # If using the gtr architecture, you can specify the number of filters here for each gateblock
 gateblock_filters: 512
+# If using the gtr architecture, you can specify the number of gateblocks required in the architecture
+num_gateblocks: 7
+# If using the gtr architecture, you can specify at which height the feature map must be when it is collapsed by avg pooling
+avg_pool_height: 2
 # The path to the pre-trained model weights to be used during inference
 model_in: ./data/model_weights/example_model/run1
 # The size which all images will be resized/padded for inference on the model
