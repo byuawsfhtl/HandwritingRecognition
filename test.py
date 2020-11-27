@@ -81,7 +81,7 @@ def test(args):
     if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
         model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
                               sequence_size=configs[MAX_SEQ_SIZE],
-                              vocabulary_size=len(charset) + 1, gateblock_filters=configs[STD_GATEBLOCK_FILTERS],
+                              vocabulary_size=len(charset) + 1, std_gateblock_filters=configs[STD_GATEBLOCK_FILTERS],
                               pooling_gateblock_filters=configs[POOLING_GATEBLOCK_FILTERS],
                               num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_HEIGHT])
     elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
