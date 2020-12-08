@@ -84,7 +84,7 @@ def train_model(args):
                                                   eval(configs[IMG_SIZE]))
         train_dataset = dataset.take(train_dataset_size)\
             .cache()\
-            .shuffle(100, reshuffle_each_iteration=True)\
+            .shuffle(1000, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = dataset.skip(train_dataset_size)\
             .cache()\

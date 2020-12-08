@@ -111,7 +111,7 @@ def str_to_idxs(string, char2idx, sequence_size):
     :param sequence_size: The final sequence length
     :return: The converted string now in its integer representation
     """
-    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.bytes_split(string), dtype=tf.int32)
+    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.unicode_split(string, 'UTF-8'), dtype=tf.int32)
     return pad_or_truncate(idxs, sequence_size=sequence_size)
 
 
@@ -235,7 +235,7 @@ def get_encoded_dataset_from_csv(csv_path, char2idx, max_seq_size, img_size):
             tf.strings.join([path_prefix, tf.strings.reduce_join(tf.strings.split(img_path, '/'), separator=path_sep)],
                             separator=path_sep),
             transcription, char2idx, max_seq_size, img_size),
-        num_parallel_calls=tf.data.experimental.AUTOTUNE)\
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 
 def get_encoded_inference_dataset_from_img_path(img_path, img_size):
