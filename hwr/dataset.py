@@ -203,7 +203,7 @@ def read_and_encode_image(img_path, img_size=(64, 1024)):
     :return: The encoded image in its tensor/integer representation
     """
     img_bytes = tf.io.read_file(img_path)
-    img = tf.image.decode_image(img_bytes, dtype=tf.float32, channels=3, expand_animations=False)
+    img = tf.image.decode_image(img_bytes, channels=1, expand_animations=False)
     img = img_resize_with_pad(img, img_size)
     img = tf.image.per_image_standardization(img)
 
