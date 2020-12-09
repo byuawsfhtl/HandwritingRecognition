@@ -159,6 +159,39 @@ def idxs_to_str_batch(batch, idx2char, merge_repeated=True):
                      dtype=tf.string)
 
 
+def img_resize_with_pad(img_tensor, desired_size, pad_value=255):
+    """
+    The standard tf.image.resize_with_pad function does not allow for specifying the pad value,
+    so we create a function with that capability here. Aspect ratio will be preserved.
+
+    :param img_tensor: The image tensor to be resized and padded
+    :param desired_size: The desired size (height, width)
+    :param pad_value: The value to pad the tensor with
+    """
+    img_size = tf.shape(img_tensor)
+
+    img_ratio = img_size[0] / img_size[1]
+    desired_ratio = desired_size[0] / desired_size[1]
+
+    if img_ratio >= desired_ratio:
+        # Solve by height
+        new_height = desired_size[0]
+        new_width = int(desired_size[0] // img_ratio)
+    else:
+        new_height = int(desired_size[1] * img_ratio)
+        new_width = desired_size[1]
+        # Solve by width
+
+    resized_img = tf.image.resize(img_tensor, (new_height, new_width), method=tf.image.ResizeMethod.BICUBIC)
+
+    pad_height = desired_size[0] - new_height
+    pad_width = desired_size[1] - new_width
+
+    img_padded = tf.pad(resized_img, [[pad_height, 0], [0, pad_width], [0, 0]], constant_values=pad_value)
+
+    return img_padded
+
+
 def read_and_encode_image(img_path, img_size=(64, 1024)):
     """
     Used by both encode_img_and_transcription (training) and encode_img_with_name (inference). This method
@@ -170,9 +203,9 @@ def read_and_encode_image(img_path, img_size=(64, 1024)):
     :return: The encoded image in its tensor/integer representation
     """
     img_bytes = tf.io.read_file(img_path)
-    img = tf.image.decode_image(img_bytes, dtype=tf.float32)
+    img = tf.image.decode_image(img_bytes, dtype=tf.float32, channels=3, expand_animations=False)
+    img = img_resize_with_pad(img, img_size)
     img = tf.image.per_image_standardization(img)
-    img = tf.image.resize_with_pad(img, img_size[0], img_size[1])
 
     return img
 
