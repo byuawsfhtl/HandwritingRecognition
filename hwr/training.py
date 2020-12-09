@@ -43,7 +43,7 @@ class ModelTrainer:
         self.val_dataset_size = val_dataset_size
         self.model_out = model_out
         self.save_every = save_every
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+        self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr)
         self.max_seq_size = max_seq_size
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
         self.val_loss = tf.keras.metrics.Mean(name='val_loss')
