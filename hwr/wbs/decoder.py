@@ -58,10 +58,9 @@ class WordBeamSearch:
         mat = tf.roll(mat, shift=-1, axis=2)  # Roll the class axis to place ctc-blank last (which is what wbs expects)
         output = self.module.word_beam_search(mat, self.beam_width, self.lm_type, self.lm_smoothing, self.corpus,
                                               self.chars, self.word_chars)
-        int64_output = tf.cast(output, tf.int64)
 
         # Reverse the action of the tf.roll to get back to expected indices
-        wbs_output = tf.math.floormod(tf.math.add(int64_output, 1), self.num_chars + 1)
+        wbs_output = tf.math.floormod(tf.math.add(output, 1), self.num_chars + 1)
 
         return wbs_output
 
