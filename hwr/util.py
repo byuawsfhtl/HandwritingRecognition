@@ -11,7 +11,7 @@ def model_inference_bp(model, imgs):
     :param imgs: A mini-batch of images
     :return: The output of the recognition model
     """
-    return tf.argmax(model(imgs, training=False), 2)
+    return tf.argmax(model(imgs, training=False), 2, output_type=tf.int32)
 
 
 @tf.function
@@ -44,7 +44,7 @@ def model_inference_bp_wbs(model, imgs, wbs):
     :return: The output of best path decoding, The output of word beam search decoding
     """
     output = model(imgs, training=False)
-    bp_output = tf.argmax(output, 2)
+    bp_output = tf.argmax(output, 2, output_type=tf.int32)
     wbs_output = wbs(output)
 
     return bp_output, wbs_output
