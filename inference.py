@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 import hwr.dataset as ds
 from hwr.models import FlorRecognizer, GTRRecognizer
-from hwr.util import model_inference_bp, model_inference_wbs
+from hwr.util import model_inference, bp_decode, wbs_decode
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
 
@@ -108,10 +108,11 @@ def inference(args):
     # Iterate through each of the images and perform inference
     inference_loop = tqdm(total=tf.data.experimental.cardinality(dataset).numpy(), position=0, leave=True)
     for imgs, img_names in dataset:
+        output = model_inference(model, imgs)
         if configs[USE_WBS]:  # Use Word Beam Search Decoding
-            predictions = model_inference_wbs(model, imgs, wbs)
+            predictions = wbs_decode(wbs, output)
         else:  # Use Best Path Decoding
-            predictions = model_inference_bp(model, imgs)
+            predictions = bp_decode(output)
 
         # Convert predictions to strings
         str_predictions = ds.idxs_to_str_batch(predictions, idx2char)

@@ -1,50 +1,92 @@
 import tensorflow as tf
+import numpy as np
+
+from hwr.dataset import merge_repeating_values, pad_or_truncate
 
 
 @tf.function
-def model_inference_bp(model, imgs):
+def model_inference(model, imgs):
     """
-    Runs images through the model wrapped in a @tf.function annotation. This forces TensorFlow to run in Graph mode
-    and speed up computation. It also performs best path decoding and retuerns the output.
+    Runs the images through the model wrapped in a @tf.function annotation. This forces TensorFlow to run in Graph mode
+    and speed up computation. It does not perform any sort of decoding and returns the raw model output.
 
     :param model: The handwriting recognition model
     :param imgs: A mini-batch of images
     :return: The output of the recognition model
     """
-    return tf.argmax(model(imgs, training=False), 2, output_type=tf.int32)
+    return model(imgs, training=False)
 
 
 @tf.function
-def model_inference_wbs(model, imgs, wbs):
+def bp_decode(output):
     """
-    Runs images through the model wrapped in a @tf.function annotation. This forces Tensorflow to run in Graph mode
-    and speed up computation. It also performs word beam search decoding and returns the output.
+    Best-path decoding from raw model output.
 
-    :param model: The handwriting recognition model
-    :param imgs: A mini-batch of images
+    :param output: The model output, shape: (batch x sequence x classes)
+    :return: The output of the best-path decoding
+    """
+    return tf.argmax(output, axis=2, output_type=tf.int32)
+
+
+@tf.function
+def wbs_decode(wbs, output):
+    """
+    Word-beam-search decoding from raw model output.
+
     :param wbs: The word beam search decoder object
+    :param output: The model output, shape: (batch x sequence x classes)
     :return: The output of word beam search decoding
     """
-    output = model(imgs, training=False)
-    wbs_output = wbs(output)
-
-    return wbs_output
+    return wbs(output)
 
 
-@tf.function
-def model_inference_bp_wbs(model, imgs, wbs):
+def prediction_confidence_by_word(output):
     """
-    Runs images through the model wrapped in a @tf.function annotation. This forces Tensorflow to run in Graph mode
-    and speed up computation. It also performs word beam search and best path decoding and returns the output of those
-    decoding algorithms.
+    Given the output of the model, perform a best path decoding and provide a confidence score per word.
 
-    :param model: The handwriting recognition model
-    :param imgs: A mini-batch of images
-    :param wbs: The word beam search decoder object
-    :return: The output of best path decoding, The output of word beam search decoding
+    :param output: The raw model output
+    :return: A list of pairs of best-path decoded sequences along with its confidence score
+             Example: [[[0, 5, 5, 2], .3739], [[3, 3, 1, 1, 1, 0, 7], .6891]]
     """
-    output = model(imgs, training=False)
-    bp_output = tf.argmax(output, 2, output_type=tf.int32)
-    wbs_output = wbs(output)
+    label = tf.argmax(output, axis=2, output_type=tf.int32)
+    space_indices = tf.where(label == 1)[:, 1]
+    space_indices = tf.concat((space_indices, [tf.shape(output)[1]]), axis=0)  # Add index at the end of the sequence
 
-    return bp_output, wbs_output
+    prev_index = 0
+
+    prediction_confidence_list = list()
+
+    for index in space_indices:
+        word_slice = label[0][prev_index:index]
+        raw_word_slice = output[:, prev_index:index, :]
+        confidence = prediction_confidence(raw_word_slice)
+
+        prediction_confidence_list.append([word_slice, confidence])
+
+        prev_index = index + 1
+
+    return prediction_confidence_list
+
+
+def prediction_confidence(output):
+    """
+    Given the model output, give a confidence score for best path prediction
+
+    :param output: The model's output, shape: (batch x sequence x num_classes)
+    """
+    batch_size = output.shape[0]
+    seq_size = output.shape[1]
+
+    values = merge_repeating_values(tf.squeeze(tf.argmax(output, 2, output_type=tf.int32)))
+    mask = tf.not_equal(values, tf.constant(0, dtype=tf.int32))
+    unpadded_label = tf.boolean_mask(values, mask)
+    label = tf.expand_dims(pad_or_truncate(unpadded_label, sequence_size=seq_size), 0)
+
+    input_lengths = tf.constant(np.full(batch_size, seq_size))
+    label_lengths = tf.math.count_nonzero(label, axis=1)
+
+    loss = tf.nn.ctc_loss(label, output, label_lengths, input_lengths, logits_time_major=False)
+
+    probability = tf.exp(-loss)[0].numpy()
+
+    return probability
