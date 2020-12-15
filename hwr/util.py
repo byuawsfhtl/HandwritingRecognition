@@ -73,11 +73,12 @@ def prediction_confidence(output):
     Given the model output, give a confidence score for best path prediction
 
     :param output: The model's output, shape: (batch x sequence x num_classes)
+    :return: The confidence score
     """
     batch_size = output.shape[0]
     seq_size = output.shape[1]
 
-    values = merge_repeating_values(tf.squeeze(tf.argmax(output, 2, output_type=tf.int32)))
+    values = merge_repeating_values(tf.squeeze(tf.argmax(output, 2, output_type=tf.int32), 0))
     mask = tf.not_equal(values, tf.constant(0, dtype=tf.int32))
     unpadded_label = tf.boolean_mask(values, mask)
     label = tf.expand_dims(pad_or_truncate(unpadded_label, sequence_size=seq_size), 0)
