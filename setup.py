@@ -17,7 +17,7 @@ setup(
     keywords='BYU handwriting recognition',
     packages=find_packages(),
     package_data={
-        'hwr': 'wbs/data/*'
+        'hwr': ['wbs/data/*']
     },
     install_requires=['tensorflow-gpu', 'pandas', 'matplotlib', 'pyyaml', 'numpy', 'editdistance', 'tqdm']
 )
