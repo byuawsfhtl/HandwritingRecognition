@@ -91,3 +91,51 @@ def prediction_confidence(output):
     probability = tf.exp(-loss)[0].numpy()
 
     return probability
+
+
+def word_segments_from_sequence(prediction, space_index=1, buffer=3):
+    """
+    :param prediction: The model's prediction for the sequence
+    :param space_index: The character index used for spaces
+    :param buffer: The additional number of timesteps to be added to the end of a segment after splitting on spaces
+    :return: Word Segments as list
+    """
+    max_length = tf.size(prediction).numpy()
+    space_indices = tf.squeeze(tf.where(prediction == space_index)).numpy()
+
+    prev_index = 0
+
+    segments = []
+    for index in space_indices:
+        if index - prev_index > 1:
+            word_segment = prediction[prev_index:index]
+            start, end = find_start_and_end_from_segment(word_segment, prev_index, buffer)
+            segments.append([start, end])
+
+        prev_index = index
+
+    # Get the last word
+    if max_length != prev_index + 1:
+        word_segment = prediction[prev_index:max_length]
+        start, end = find_start_and_end_from_segment(word_segment, prev_index, buffer)
+        segments.append([start, end])
+
+    return segments
+
+
+def find_start_and_end_from_segment(word_segment, prev_index, buffer):
+    """
+    Given a word_segment, the previous word's index and the desired buffer, return the
+    starting and ending indices of the word for the entire prediction sequence.
+
+    :param word_segment: The model's prediction for a single word
+    :param prev_index: The previous word's index
+    :param buffer: The additional number of timesteps to be added to the end of a segment after splitting on spaces
+    :return: The starting and ending indices
+    """
+    non_blank_indices = tf.where(word_segment != 0)
+
+    minimum = prev_index + tf.reduce_min(non_blank_indices).numpy()
+    maximum = prev_index + tf.reduce_max(non_blank_indices).numpy()
+
+    return minimum, maximum + buffer

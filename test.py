@@ -43,7 +43,7 @@ def test(args):
     * TEST_CONFIG_FILE: The path to the test configuration file. A test configuration file
       is provided as "test_config.yaml".
 
-    Command Line Arguments:
+    Configuration File Arguments:
     * csv_path: The path to the csv file
     * dataset_eval_size: How much of the dataset should be used when testing and acquiring error rates. Float between 0-1.
     * batch_size: The number of images to be used in a batch
