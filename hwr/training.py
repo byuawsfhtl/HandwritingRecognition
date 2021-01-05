@@ -126,6 +126,8 @@ class ModelTrainer:
 
         # Place in a try/except and return the model/metrics in case we want to stop midway through training
         try:
+            min_val_loss = -1
+
             # Main loop to go through each dataset for n epochs
             for epoch in range(self.epochs):
                 # Reset our metrics for each epoch
@@ -153,10 +155,12 @@ class ModelTrainer:
                 val_loop.close()
 
                 train_losses.append(self.train_loss.result().numpy())
-                val_losses.append(self.val_loss.result().numpy())
+                new_val_loss = self.val_loss.result().numpy()
+                val_losses.append(new_val_loss)
 
                 # Save the model weights to the specified path
-                if epoch % self.save_every == self.save_every - 1:
+                if epoch % self.save_every == self.save_every - 1 and (min_val_loss==-1 or new_val_loss < min_val_loss):
+                    min_val_loss = new_val_loss
                     tf.print('Saving Model Weights to', self.model_out)
                     self.model.save_weights(self.model_out)
 
