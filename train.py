@@ -23,7 +23,6 @@ LEARNING_RATE = 'learning_rate'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 SHOW_GRAPHS = 'show_graphs'
-SAVE_EVERY = 'save_every'
 CHARSET = 'charset'
 
 
@@ -48,7 +47,6 @@ def train_model(args):
                         Otherwise, the training set will be split using this parameter.
     * model_out: The path to store the trained model weights after training
     * model_in: The path to pre-trained model weights to be loaded before training begins
-    * save_every: The frequency in epochs which the model weights will be saved during training
     * epochs: The number of epochs to train
     * batch_size: The number of images in a mini-batch
     * learning_rate: The learning rate the optimizer uses during training
@@ -122,7 +120,7 @@ def train_model(args):
     # Train the model
     model_trainer = ModelTrainer(model, configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size,
                                  val_dataset, val_dataset_size, configs[MODEL_OUT], lr=configs[LEARNING_RATE],
-                                 max_seq_size=configs[MAX_SEQ_SIZE], save_every=configs[SAVE_EVERY])
+                                 max_seq_size=configs[MAX_SEQ_SIZE])
     model, losses = model_trainer.train()
 
     # Print the losses over the course of training

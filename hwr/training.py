@@ -17,7 +17,7 @@ class ModelTrainer:
     """
 
     def __init__(self, model, epochs, batch_size, train_dataset, train_dataset_size, val_dataset, val_dataset_size,
-                 model_out, lr=4e-4, max_seq_size=128, save_every=5):
+                 model_out, lr=4e-4, max_seq_size=128):
         """
         Set up necessary variables that will be used during training, including the model, optimizer,
         encoder, and other metrics.
@@ -32,7 +32,6 @@ class ModelTrainer:
         :param model_out: The path to the location where the weights will be stored during and after training
         :param lr: The learning rate of the model
         :param max_seq_size: The maximum length of a line-level transcription (See Encoder for context)
-        :param save_every: The frequency which the model weights will be saved during training
         """
         self.model = model
         self.epochs = epochs
@@ -42,7 +41,6 @@ class ModelTrainer:
         self.train_dataset_size = train_dataset_size
         self.val_dataset_size = val_dataset_size
         self.model_out = model_out
-        self.save_every = save_every
         self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr)
         self.max_seq_size = max_seq_size
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -126,6 +124,10 @@ class ModelTrainer:
 
         # Place in a try/except and return the model/metrics in case we want to stop midway through training
         try:
+            # min_val_loss is the threshold where model weights will start to be saved when the validation loss drops
+            # below this point. Then the model will only save the weights if the lowest validation loss is achieved.
+            min_val_loss = 100
+
             # Main loop to go through each dataset for n epochs
             for epoch in range(self.epochs):
                 # Reset our metrics for each epoch
@@ -156,17 +158,15 @@ class ModelTrainer:
                 val_losses.append(self.val_loss.result().numpy())
 
                 # Save the model weights to the specified path
-                if epoch % self.save_every == self.save_every - 1:
+                if val_losses[-1] < min_val_loss:
+                    min_val_loss = val_losses[-1]
                     tf.print('Saving Model Weights to', self.model_out)
                     self.model.save_weights(self.model_out)
 
         except Exception as e:
             print("Error: {0}".format(e))
         finally:
-            # Save the model weights one last time and return the model/losses
             tf.print('Finished Training')
-            tf.print('Saving Model Weights to', self.model_out)
-            self.model.save_weights(self.model_out)
             return self.model, (train_losses, val_losses)
 
     def __call__(self):
