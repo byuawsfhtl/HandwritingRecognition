@@ -104,7 +104,7 @@ def inference(args):
     for imgs, img_names in dataset:
         output = model_inference(model, imgs)
         if configs[USE_WBS]:  # Use Word Beam Search Decoding
-            predictions = wbs.decode(output.numpy())
+            predictions = wbs.decode(output)
         else:  # Use Best Path Decoding
             predictions = bp_decode(output)
 

@@ -68,8 +68,7 @@ class WordBeamSearch:
         :param batch: [Batch, TimeSteps, Classes]
         :return: Most probable Sequence
         """
-        assert type(batch) == np.ndarray  # Must be numpy array
-
+        batch = tf.nn.softmax(batch).numpy()
         best_beam_batch = []
         for sequence in batch:
             best_beam_batch.append(self.wbs_single_instance(sequence))

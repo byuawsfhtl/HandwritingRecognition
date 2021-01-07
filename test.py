@@ -107,7 +107,7 @@ def test(args):
         output = model_inference(model, images)
 
         bp_prediction = bp_decode(output)
-        wbs_prediction = wbs.decode(output.numpy())
+        wbs_prediction = wbs.decode(output)
 
         # Perform best-path decoding, map to strings, and append to prediction list
         str_bp_prediction = ds.idxs_to_str_batch(bp_prediction, idx2char, merge_repeated=True)
