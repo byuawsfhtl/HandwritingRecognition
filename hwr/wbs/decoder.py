@@ -1,68 +1,84 @@
 import tensorflow as tf
+import numpy as np
 
-from hwr.wbs.loader import FilePaths
+from hwr.wbs.tree import PrefixTree
 
 
 class WordBeamSearch:
     """
-    Wrapper class for using the Word Beam Search algorithm through a pre-built tensorflow custom operation.
-    Tensorflow custom ops are useful because they allow the decoding to take place in Graph Mode. However, they
-    are only supported in Linux/MacOS.
+    The Word-Beam-Search decoding algorithm. This decoder constrains the model's output to dictionary words
+    while allowing for arbitrary punctuation.
 
     See CTC-Word-Beam-Search GitHub Readme for more details:
     https://github.com/githubharald/CTCWordBeamSearch
     """
-    def __init__(self, beam_width, lm_type, lm_smoothing, corpus, chars, word_chars, os_type='linux', gpu=True,
-                 multithreaded=False):
+    def __init__(self, words, punctuation, beam_width, char2idx, blank_char=0):
         """
+        :param words: String with space delimited words representing the possible words for decoding
+        :param punctuation: String with no delimiters containing all punctuation characters
         :param beam_width: The beam width used in the word beam search algorithm
-        :param lm_type: The language model type. Most often will use 'Words'. See WBS documentation for more details.
-        :param lm_smoothing: Float representing language model smoothing. See WBS documentation for more details.
-        :param corpus: String with space delimited words representing the possible words for decoding
-        :param chars: String containing all possible characters used in model
-        :param word_chars: String containing all non-punctuation characters
-        :param os_type: The operating system type: ['linux', 'mac'] Windows is not supported.
-        :param gpu: Boolean indicating whether or not the system supports GPU/Cuda
-        :param multithreaded: Whether or not to use 8 parallel threads during decoding operation.
+        :param char2idx: Tensorflow lookup table that contains mapping between chars and idxs
+        :param blank_char: The idx representing the blank character
         """
-        self.num_chars = len(chars)
+        chars, idxs = char2idx.export()
+        chars = chars.numpy()
+        idxs = idxs.numpy()
+        self.char2idx = {char.decode('utf-8'): idx for idx, char in zip(idxs, chars)}
+
+        self.prefix_tree = PrefixTree(words, self.char2idx, list(punctuation))
+        self.prefix_tree.build_tree()
         self.beam_width = beam_width
-        self.lm_type = lm_type
-        self.lm_smoothing = lm_smoothing
-        self.corpus = corpus.encode('utf8')
-        self.chars = chars.encode('utf8')
-        self.word_chars = word_chars.encode('utf8')
+        self.blank_char = blank_char
 
-        assert os_type in ['linux', 'mac']  # Windows not supported
+    @staticmethod
+    def best_beams(beams, beam_width):
+        # Sort and return the top beam_width
+        return sorted(beams, key=lambda x: x[1] + x[2], reverse=True)[:beam_width]
 
-        if os_type == 'linux' and gpu and multithreaded:
-            op_path = FilePaths.wbs_linux_gpu_parallel_8()
-        elif os_type == 'linux' and not gpu and multithreaded:
-            op_path = FilePaths.wbs_linux_parallel_8()
-        elif os_type == 'linux' and not gpu and not multithreaded:
-            op_path = FilePaths.wbs_linux()
-        elif os_type == 'linux' and gpu and not multithreaded:
-            op_path = FilePaths.wbs_linux_gpu()
-        elif os_type == 'mac' and multithreaded:
-            op_path = FilePaths.wbs_mac_parallel_8()
-        elif os_type == 'mac' and not multithreaded:
-            op_path = FilePaths.wbs_mac()
-        else:
-            raise Exception('Unsupported Platform! Must be [linux, mac]. Windows not supported for TF custom ops')
+    def wbs_single_instance(self, sequence):
+        big_b = [([], 0, 1, [])]
+        for timestep in sequence:
+            best_beams = self.best_beams(big_b, self.beam_width)
+            big_b = []
+            for b, prob_non_blank, prob_blank, full_b in best_beams:
+                # Calculate probability of the beam not being extended (either by a repeating character or blank)
+                if len(b) != 0:
+                    pnb = prob_non_blank + (prob_non_blank * timestep[b[-1]])
+                else:
+                    pnb = prob_non_blank
 
-        self.module = tf.load_op_library(op_path)
+                pb = prob_blank + ((prob_non_blank + prob_blank) * timestep[self.blank_char])
+                extender = [self.blank_char] if len(b) == 0 or timestep[self.blank_char] > timestep[b[-1]] else [b[-1]]
+                big_b.append((b, pnb, pb, full_b + extender))
 
-    def decode(self, mat):
-        mat = tf.nn.softmax(mat)
-        mat = tf.transpose(mat, [1, 0, 2])  # Transpose to get (SequenceLength x BatchSize x NumClasses)
-        mat = tf.roll(mat, shift=-1, axis=2)  # Roll the class axis to place ctc-blank last (which is what wbs expects)
-        output = self.module.word_beam_search(mat, self.beam_width, self.lm_type, self.lm_smoothing, self.corpus,
-                                              self.chars, self.word_chars)
+                for c in self.prefix_tree.get_possible_chars(b):
+                    b_prime = b + [c]
+                    if len(b) > 0 and b[-1] == c:
+                        pnb = prob_non_blank + (prob_blank * timestep[c])
+                    else:
+                        pnb = prob_non_blank + ((prob_blank + prob_non_blank) * timestep[c])
+                    big_b.append((b_prime, pnb, 0, full_b + [c]))
 
-        # Reverse the action of the tf.roll to get back to expected indices
-        wbs_output = tf.math.floormod(tf.math.add(output, 1), self.num_chars + 1)
+        big_b = self.best_beams(big_b, 1)  # Reduce top beams to 1
 
-        return wbs_output
+        return big_b[0][3]
 
-    def __call__(self, mat):
-        return self.decode(mat)
+    def decode(self, batch):
+        """
+        :param batch: [Batch, TimeSteps, Classes]
+        :return: Most probable Sequence
+        """
+        assert type(batch) == np.ndarray  # Must be numpy array
+
+        best_beam_batch = []
+        for sequence in batch:
+            best_beam_batch.append(self.wbs_single_instance(sequence))
+
+        return tf.constant(best_beam_batch, dtype=tf.int32)
+
+    def __call__(self, batch):
+        """
+        :param batch: [Batch, TimeSteps, Classes]
+        :return: Most probable Sequence
+        """
+        return self.decode(batch)

@@ -7,7 +7,7 @@ from tqdm import tqdm
 import hwr.dataset as ds
 from hwr.metrics import ErrorRates
 from hwr.models import FlorRecognizer, GTRRecognizer
-from hwr.util import model_inference_bp_wbs
+from hwr.util import model_inference, bp_decode
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
 
@@ -26,10 +26,7 @@ IMG_SIZE = 'img_size'
 CHARSET = 'charset'
 SHOW_PREDICTIONS = 'show_predictions'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
-WBS_WORD_CHARSET = 'wbs_word_charset'
-WBS_OS_TYPE = 'wbs_os_type'
-WBS_GPU = 'wbs_gpu'
-WBS_MULTITHREADED = 'wbs_multithreaded'
+WBS_PUNCTUATION = 'wbs_punctuation'
 
 
 def test(args):
@@ -52,9 +49,7 @@ def test(args):
                If no characters are specified, the default is used.
     * show_predictions: Boolean indicating whether or not to print the bp/wbs predictions along with label
     * wbs_beam_width: The beam width needed for the word beam search algorithm
-    * wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
-    * wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
-    * wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
+    * wbs_punctuation: String containing all punctuation characters
     """
     # Ensure the train config file is included
     if len(args) == 0:
@@ -66,7 +61,7 @@ def test(args):
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
-    words_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
+    punctuation = configs[WBS_PUNCTUATION] if configs[WBS_PUNCTUATION] else ds.DEFAULT_PUNCTUATION
     char2idx = ds.get_char2idx(charset=charset)
     idx2char = ds.get_idx2char(charset=charset)
 
@@ -98,8 +93,7 @@ def test(args):
     corpus = DictionaryLoader.french_words(include_cased=True)
 
     # Create the word beam search decoder
-    wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, words_charset,
-                         os_type=configs[WBS_OS_TYPE], gpu=configs[WBS_GPU], multithreaded=configs[WBS_MULTITHREADED])
+    wbs = WordBeamSearch(corpus, punctuation, configs[WBS_BEAM_WIDTH], char2idx)
 
     # Create lists to store labels and predictions for various decoding methods
     bp_predictions = []
@@ -110,14 +104,17 @@ def test(args):
     loop = tqdm(total=int(dataset_size/configs[BATCH_SIZE]), position=0, leave=True)
     for images, labels in dataset:
         # Run inference on the model
-        bp_prediction, wbs_prediction = model_inference_bp_wbs(model, images, wbs)
+        output = model_inference(model, images)
+
+        bp_prediction = bp_decode(output)
+        wbs_prediction = wbs.decode(output.numpy())
 
         # Perform best-path decoding, map to strings, and append to prediction list
         str_bp_prediction = ds.idxs_to_str_batch(bp_prediction, idx2char, merge_repeated=True)
         bp_predictions.extend(bytes_to_unicode(str_bp_prediction))
 
         # Perform word-beam-search decoding, map to strings, and append to prediction list
-        str_wbs_prediction = ds.idxs_to_str_batch(wbs_prediction, idx2char, merge_repeated=False)
+        str_wbs_prediction = ds.idxs_to_str_batch(wbs_prediction, idx2char, merge_repeated=True)
         wbs_predictions.extend(bytes_to_unicode(str_wbs_prediction))
 
         # Get labels, map to strings, and append to label list

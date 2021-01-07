@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 import hwr.dataset as ds
 from hwr.models import FlorRecognizer, GTRRecognizer
-from hwr.util import model_inference, bp_decode, wbs_decode
+from hwr.util import model_inference, bp_decode
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
 
@@ -26,11 +26,8 @@ CONSOLE_OUT = 'console_out'
 CHARSET = 'charset'
 
 USE_WBS = 'use_wbs'
-WBS_WORD_CHARSET = 'wbs_word_charset'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
-WBS_OS_TYPE = 'wbs_os_type'
-WBS_GPU = 'wbs_gpu'
-WBS_MULTITHREADED = 'wbs_multithreaded'
+WBS_PUNCTUATION = 'wbs_punctuation'
 
 
 def inference(args):
@@ -53,9 +50,7 @@ def inference(args):
                If no characters are specified, the default is used.
     * use_wbs: Boolean indicating whether or not to use Word Beam Search for decoding. If False, best path is used.
     * wbs_beam_width: The beam width needed for the word beam search algorithm
-    * wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
-    * wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
-    * wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
+    * wbs_punctuation: String containing all punctuation characters
 
     :param args: Command line arguments
     :return: None
@@ -74,8 +69,9 @@ def inference(args):
 
     # Load our character set
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
-    word_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
+    punctuation = configs[WBS_PUNCTUATION] if configs[WBS_PUNCTUATION] else ds.DEFAULT_PUNCTUATION
     idx2char = ds.get_idx2char(charset=charset)
+    char2idx = ds.get_char2idx(charset=charset)
 
     if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
         model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
@@ -98,9 +94,7 @@ def inference(args):
         DictionaryLoader.english_words(include_cased=True)
 
     if configs[USE_WBS]:
-        wbs = WordBeamSearch(configs[WBS_BEAM_WIDTH], 'Words', 0.0, corpus, charset, word_charset,
-                             os_type=configs[WBS_OS_TYPE], gpu=configs[WBS_GPU],
-                             multithreaded=configs[WBS_MULTITHREADED])
+        wbs = WordBeamSearch(corpus, punctuation, configs[WBS_BEAM_WIDTH], char2idx)
 
     # Keep track of all inferences in list of tuples
     inferences = []
@@ -110,12 +104,12 @@ def inference(args):
     for imgs, img_names in dataset:
         output = model_inference(model, imgs)
         if configs[USE_WBS]:  # Use Word Beam Search Decoding
-            predictions = wbs_decode(wbs, output)
+            predictions = wbs.decode(output.numpy())
         else:  # Use Best Path Decoding
             predictions = bp_decode(output)
 
         # Convert predictions to strings
-        str_predictions = ds.idxs_to_str_batch(predictions, idx2char)
+        str_predictions = ds.idxs_to_str_batch(predictions, idx2char, merge_repeated=True)
 
         # Append to inferences list
         for str_pred, img_name in zip(str_predictions.numpy(), img_names.numpy()):

@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 from hwr.metrics import ErrorRates
-from hwr.util import model_inference_bp
+from hwr.util import model_inference, bp_decode
 from hwr.wbs.decoder import WordBeamSearch
 
 import hwr.dataset as ds
@@ -204,8 +204,8 @@ class ModelMetrics:
         all_inferences = []
         all_labels = []
         for images, labels in self.dataset:
-            output = model_inference_bp(self.model, images)
-            predictions = tf.argmax(output, axis=2)  # Best Path
+            output = model_inference(self.model, images)
+            predictions = bp_decode(output)
 
             str_predictions = ds.idxs_to_str_batch(predictions, self.idx2char, merge_repeated=True)
             str_labels = ds.idxs_to_str_batch(labels, self.idx2char, merge_repeated=False)

@@ -3,12 +3,6 @@ import os
 ENGLISH_WORDS = 'data/english_words.txt'
 FRENCH_WORDS = 'data/french_words.txt'
 ASCII_NAMES = 'data/ascii_names.txt'
-WBS_MAC = 'data/TFWordBeamSearchMac.so'
-WBS_MAC_PARALLEL_8 = 'data/TFWordBeamSearchMacParallel8.so'
-WBS_LINUX = 'data/TFWordBeamSearchLinux.so'
-WBS_LINUX_PARALLEL_8 = 'data/TFWordBeamSearchLinuxParallel8.so'
-WBS_LINUX_GPU = 'data/TFWordBeamSearchLinuxGPU.so'
-WBS_LINUX_GPU_PARALLEL_8 = 'data/TFWordBeamSearchLinuxGPUParallel8.so'
 CENSUS_NAMES_5 = 'data/census_names_5.txt'
 CENSUS_NAMES_10 = 'data/census_names_10.txt'
 CENSUS_NAMES_15 = 'data/census_names_15.txt'
@@ -39,30 +33,6 @@ class FilePaths:
     @staticmethod
     def ascii_names():
         return os.path.join(FilePaths.current_file_path(), ASCII_NAMES)
-
-    @staticmethod
-    def wbs_mac():
-        return os.path.join(FilePaths.current_file_path(), WBS_MAC)
-
-    @staticmethod
-    def wbs_mac_parallel_8():
-        return os.path.join(FilePaths.current_file_path(), WBS_MAC_PARALLEL_8)
-
-    @staticmethod
-    def wbs_linux():
-        return os.path.join(FilePaths.current_file_path(), WBS_LINUX)
-
-    @staticmethod
-    def wbs_linux_gpu():
-        return os.path.join(FilePaths.current_file_path(), WBS_LINUX_GPU)
-
-    @staticmethod
-    def wbs_linux_parallel_8():
-        return os.path.join(FilePaths.current_file_path(), WBS_LINUX_PARALLEL_8)
-
-    @staticmethod
-    def wbs_linux_gpu_parallel_8():
-        return os.path.join(FilePaths.current_file_path(), WBS_LINUX_GPU_PARALLEL_8)
 
     @staticmethod
     def census_names_5():

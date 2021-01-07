@@ -26,13 +26,8 @@ charset:
 # Whether or not to print examples to the console that contains predictions (using bp and wbs) and ground-truth labels
 show_predictions: True
 
-# Non-Punctuation character set (wbs_word_charset: 'abcdefABCDEF'). If not characters are specified, the default is used.
-wbs_word_charset:
-# WordBeamSearch parameters
-wbs_beam_width: 25
-# Operating System Type: ['mac', 'linux']
-wbs_os_type: mac
-# Whether or not to include 'GPU' support for WBS Custom OP
-wbs_gpu: True
-# Whether or not to use 8 threads when decoding model output matrix
-wbs_multithreaded: True
+# Non-Punctuation character set (wbs_word_charset: '12345'). If not characters are specified, the default is used.
+wbs_punctuation:
+# Beam width use for wbs algorithm
+wbs_beam_width: 15
+

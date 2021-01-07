@@ -9,6 +9,8 @@ DEFAULT_CHARS = ' !"#$%&\'()*+,-./0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`ab
 # The default list of non-punctuation characters needed for the word beam search decoding algorithm
 DEFAULT_NON_PUNCTUATION = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÂÄÇÈÉÊÔÖÜßàáâäæçèéêëìîïñòóôöøùúûüÿ' \
                           'łŒœΓΖΤάήαδεηικλμνξοπρτυχψωόώІ'
+# The default list of punctuation characters needed for hte word beam search decoding algorithm
+DEFAULT_PUNCTUATION = ' !"#$%&\'()*+,-./0123456789:;=?[]_`|~£§¨«¬°²´·º»¼½¾‒–—†‡‰‹›₂₤℔⅓⅔⅕⅖⅗⅘⅙⅚⅛∆∇∫≠□♀♂✓'
 
 
 def str_charset_to_lists(charset):
