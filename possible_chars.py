@@ -21,11 +21,15 @@ def possible_chars(args):
     :param args: command line arguments
     :return: None
     """
-    if len(args) != 1:
+    if len(args) == 0:
         print('Please include path to text file!')
         return
 
-    words = DictionaryLoader.from_file(args[0], include_cased=True)
+    words = ''
+    for file_path in args:
+        print('Loading ', file_path)
+        words += DictionaryLoader.from_file(file_path, include_cased=True) + ' '
+
     chars = list(set(''.join(words)))
     chars = np.sort(chars)
     chars = ''.join(chars)
