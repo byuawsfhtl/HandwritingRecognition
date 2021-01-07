@@ -22,8 +22,6 @@ avg_pool_height: 2
 model_out: ./data/model_weights/example_model/run1
 # The path to pre-trained model weights
 model_in:
-# The frequency in epochs which the model weights will be saved during training
-save_every: 5
 
 # The number of epochs to train
 epochs: 100
