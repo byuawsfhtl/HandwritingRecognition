@@ -22,15 +22,15 @@ class WordBeamSearchWrapper:
         :param blank_char: The idx representing the blank character
         """
         #Calculate wordChars
-        print("NUM CHARS: ", len(charset))
-        print(charset)
-        count = 0
+        #print("NUM CHARS: ", len(charset))
+        #print(charset)
+        #count = 0
         wordChars = ""
         for c in charset:
             if punctuation.find(c) == -1:
                 wordChars += c
-            count+=1
-            print(count, c)
+            #count+=1
+            #print(count, c)
 
         self.wbs = WordBeamSearch(beam_width, 'Words', 0.0, words.encode('utf8'), charset.encode('utf8'), wordChars.encode('utf8'))
         
