@@ -13,7 +13,7 @@ num_gateblocks: 7
 # If using the gtr architecture, you can specify at which height the feature map must be when it is collapsed by avg pooling
 avg_pool_height: 2
 # The path to the pre-trained model weights
-model_in: ./data/model_weights/example_model/run1
+model_in: ./data/model_weights/testrun
 # The number of images in a mini-batch
 batch_size: 2
 # The max number of characters in a line-level transcription

@@ -9,7 +9,7 @@ from hwr.metrics import ErrorRates
 from hwr.models import FlorRecognizer, GTRRecognizer
 from hwr.util import model_inference, bp_decode
 from hwr.wbs.loader import DictionaryLoader
-from hwr.wbs.decoder import WordBeamSearch
+from hwr.wbs.decoder import WordBeamSearchWrapper
 
 
 CSV_PATH = 'csv_path'
@@ -62,6 +62,7 @@ def test(args):
 
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
     punctuation = configs[WBS_PUNCTUATION] if configs[WBS_PUNCTUATION] else ds.DEFAULT_PUNCTUATION
+
     char2idx = ds.get_char2idx(charset=charset)
     idx2char = ds.get_idx2char(charset=charset)
 
@@ -90,10 +91,10 @@ def test(args):
 
     # Corpus creation. Currently, this is a manual process of loading in specific dictionaries. Enhancements will be
     # added later to allow for custom dictionaries to be loaded.
-    corpus = DictionaryLoader.french_words(include_cased=True)
+    corpus = DictionaryLoader.english_words(include_cased=True) #CHANGE BACK
 
     # Create the word beam search decoder
-    wbs = WordBeamSearch(corpus, punctuation, configs[WBS_BEAM_WIDTH], char2idx)
+    wbs = WordBeamSearchWrapper(corpus, punctuation, configs[WBS_BEAM_WIDTH], charset)
 
     # Create lists to store labels and predictions for various decoding methods
     bp_predictions = []
