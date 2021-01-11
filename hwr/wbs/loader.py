@@ -2,14 +2,11 @@ import os
 
 ENGLISH_WORDS = 'data/english_words.txt'
 FRENCH_WORDS = 'data/french_words.txt'
+FRENCH_NAMES = 'data/french_names.txt'
 ASCII_NAMES = 'data/ascii_names.txt'
 CENSUS_NAMES_5 = 'data/census_names_5.txt'
 CENSUS_NAMES_10 = 'data/census_names_10.txt'
 CENSUS_NAMES_15 = 'data/census_names_15.txt'
-CENSUS_NAMES_50 = 'data/census_names_50.txt'
-CENSUS_NAMES_100 = 'data/census_names_100.txt'
-CENSUS_NAMES_250 = 'data/census_names_250.txt'
-CENSUS_NAMES_500 = 'data/census_names_500.txt'
 
 
 class FilePaths:
@@ -31,6 +28,10 @@ class FilePaths:
         return os.path.join(FilePaths.current_file_path(), FRENCH_WORDS)
 
     @staticmethod
+    def french_names():
+        return os.path.join(FilePaths.current_file_path(), FRENCH_NAMES)
+
+    @staticmethod
     def ascii_names():
         return os.path.join(FilePaths.current_file_path(), ASCII_NAMES)
 
@@ -45,22 +46,6 @@ class FilePaths:
     @staticmethod
     def census_names_15():
         return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_15)
-
-    @staticmethod
-    def census_names_50():
-        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_50)
-
-    @staticmethod
-    def census_names_100():
-        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_100)
-
-    @staticmethod
-    def census_names_250():
-        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_250)
-
-    @staticmethod
-    def census_names_500():
-        return os.path.join(FilePaths.current_file_path(), CENSUS_NAMES_500)
 
 
 class DictionaryLoader:
@@ -113,6 +98,16 @@ class DictionaryLoader:
         return DictionaryLoader.from_file(FilePaths.french_words(), include_cased=include_cased)
 
     @staticmethod
+    def french_names(include_cased=False):
+        """
+        List of 25,000 french names as given by Ancestry.
+        :param include_cased: True indicating a desire to add both the lower-cased and capitalized word or False to only
+                            include the word as given in the list.
+        :return: String of French names separated by newline
+        """
+        return DictionaryLoader.from_file(FilePaths.french_names(), include_cased=include_cased)
+
+    @staticmethod
     def ascii_names(include_cased=False):
         """
         List of nearly 100,000 ascii given names and surnames.
@@ -145,35 +140,3 @@ class DictionaryLoader:
         This list contains names that occurred at least 15 times in the 5 censuses combined.
         """
         return DictionaryLoader.from_file(FilePaths.census_names_15(), include_cased=include_cased)
-
-    @staticmethod
-    def census_names_50(include_cased=False):
-        """
-        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
-        This list contains names that occurred at least 50 times in the 5 censuses combined.
-        """
-        return DictionaryLoader.from_file(FilePaths.census_names_50(), include_cased=include_cased)
-
-    @staticmethod
-    def census_names_100(include_cased=False):
-        """
-        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
-        This list contains names that occurred at least 100 times in the 5 censuses combined.
-        """
-        return DictionaryLoader.from_file(FilePaths.census_names_100(), include_cased=include_cased)
-
-    @staticmethod
-    def census_names_250(include_cased=False):
-        """
-        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
-        This list contains names that occurred at least 250 times in the 5 censuses combined.
-        """
-        return DictionaryLoader.from_file(FilePaths.census_names_250(), include_cased=include_cased)
-
-    @staticmethod
-    def census_names_500(include_cased=False):
-        """
-        List of census names acquired from the 1900-1940 census. A master list was acquired with all possible names.
-        This list contains names that occurred at least 500 times in the 5 censuses combined.
-        """
-        return DictionaryLoader.from_file(FilePaths.census_names_500(), include_cased=include_cased)
