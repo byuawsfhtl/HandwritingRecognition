@@ -46,6 +46,10 @@ class ModelTrainer:
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
         self.val_loss = tf.keras.metrics.Mean(name='val_loss')
 
+    def save_model(self):
+        tf.print('Saving Model Weights to', self.model_out)
+        self.model.save_weights(self.model_out)
+
     @tf.function
     def train_step(self, images, labels):
         """
@@ -159,9 +163,8 @@ class ModelTrainer:
 
                 # Save the model weights to the specified path
                 if val_losses[-1] < min_val_loss:
+                    self.save_model()
                     min_val_loss = val_losses[-1]
-                    tf.print('Saving Model Weights to', self.model_out)
-                    self.model.save_weights(self.model_out)
 
         except Exception as e:
             print("Error: {0}".format(e))
