@@ -18,6 +18,7 @@ requirements:
     - pandas==1.0.3
     - matplotlib==3.2.1
     - tqdm==4.38
+    - byu-handwriting-lab::word_beam_search
   run:
     - python==3.7.3
     - numpy==1.19.1
@@ -26,6 +27,7 @@ requirements:
     - pandas==1.0.3
     - matplotlib==3.2.1
     - tqdm==4.38
+    - byu-handwriting-lab::word_beam_search
 
 test:
   imports:
