@@ -1,7 +1,9 @@
 import os
 
 import tensorflow as tf
+import numpy as np
 import pandas as pd
+from PIL import Image
 
 # The default list of characters used in the recognition model
 DEFAULT_CHARS = ' !"#$%&\'()*+,-./0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`abcdefghijklmnopqrstuvwxyz|~£§¨«¬\xad' \
@@ -194,6 +196,37 @@ def img_resize_with_pad(img_tensor, desired_size, pad_value=255):
     return img_padded
 
 
+def img_resize_with_pad_numpy(img, desired_size, pad_value=255):
+    """
+    Same as img_resize_with_pad, except pillow and numpy are used to resize and pad the image
+    compared to the default tensorflow image operations.
+
+    :param img_tensor: The pillow image to be resized and padded
+    :param desired_size: The desired size (height, width)
+    :param pad_value: The value to pad the tensor with
+    """
+    img_size = np.array(img).shape
+
+    img_ratio = img_size[0] / img_size[1]
+    desired_ratio = desired_size[0] / desired_size[1]
+
+    if img_ratio >= desired_ratio:  # Solve by height
+      new_height = desired_size[0]
+      new_width = int(desired_size[0] // img_ratio)
+    else:  # Solve by width
+      new_height = int(desired_size[1] * img_ratio)
+      new_width = desired_size[1]
+
+    img = np.array(img.resize((new_width, new_height)))
+
+    border_top = desired_size[0] - new_height
+    border_right = desired_size[1] - new_width
+
+    img = np.pad(img, [(border_top, 0), (0, border_right), (0, 0)], mode='constant', constant_values=pad_value)
+
+    return img
+
+
 def read_and_encode_image(img_path, img_size=(64, 1024)):
     """
     Used by both encode_img_and_transcription (training) and encode_img_with_name (inference). This method
@@ -212,6 +245,23 @@ def read_and_encode_image(img_path, img_size=(64, 1024)):
     return img
 
 
+def read_and_encode_image_pillow(img_path, img_size=(64, 1024)):
+    """
+    Same as read_and_encode_image function except using pillow to load the image rather than
+    default tensorflow image operations
+
+    :param img_path: The path to the desired image
+    :param img_size: The size of the image after resizing/padding
+    :return: The encoded image in its tensor/integer representation
+    """
+    img = Image.open(img_path.numpy())
+    img = img.convert('RGB')
+    img = img_resize_with_pad_numpy(img, img_size.numpy())
+    img = tf.constant(img, dtype=tf.float32)
+
+    return img
+
+
 def encode_img_and_transcription(img_path, transcription, char2idx, sequence_size=128, img_size: tuple = (64, 1024)):
     """
     The actual function to map image paths and string transcriptions to its tensor/integer representation.
@@ -223,7 +273,8 @@ def encode_img_and_transcription(img_path, transcription, char2idx, sequence_siz
     :param img_size: The size of the image after resizing/padding
     :return: The image and transcription in their tensor/integer representations.
     """
-    img = read_and_encode_image(img_path, img_size)
+    img = tf.py_function(read_and_encode_image_pillow, [img_path, img_size], [tf.float32])
+    img = tf.squeeze(img, 0)
     line = str_to_idxs(transcription, char2idx, sequence_size)
     return img, line
 
