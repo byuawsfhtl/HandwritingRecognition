@@ -81,11 +81,9 @@ def train_model(args):
         dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                   eval(configs[IMG_SIZE]))
         train_dataset = dataset.take(train_dataset_size)\
-            .cache()\
             .shuffle(100, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = dataset.skip(train_dataset_size)\
-            .cache()\
             .batch(configs[BATCH_SIZE])
 
     else:  # Use the data as given in the train/validation csv files - no additional splits performed
@@ -98,7 +96,6 @@ def train_model(args):
             .batch(configs[BATCH_SIZE])
         val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                       eval(configs[IMG_SIZE]))\
-            .cache()\
             .batch(configs[BATCH_SIZE])
 
     if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
