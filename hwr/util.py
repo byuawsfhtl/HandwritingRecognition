@@ -25,7 +25,7 @@ def bp_decode(output):
     :param output: The model output, shape: (batch x sequence x classes)
     :return: The output of the best-path decoding
     """
-    return tf.argmax(output, axis=2, output_type=tf.int32)
+    return tf.argmax(output, axis=2, output_type=tf.int64)
 
 
 def prediction_confidence(output, prediction):
@@ -40,7 +40,7 @@ def prediction_confidence(output, prediction):
     seq_size = output.shape[1]
 
     values = merge_repeating_values(prediction)
-    mask = tf.not_equal(values, tf.constant(0, dtype=tf.int32))
+    mask = tf.not_equal(values, tf.constant(0, dtype=tf.int64))
     unpadded_label = tf.boolean_mask(values, mask)
     label = tf.expand_dims(pad_or_truncate(unpadded_label, sequence_size=seq_size), 0)
 

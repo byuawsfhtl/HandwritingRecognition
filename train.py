@@ -82,7 +82,7 @@ def train_model(args):
                                                   eval(configs[IMG_SIZE]))
         train_dataset = dataset.take(train_dataset_size)\
             .cache()\
-            .shuffle(1000, reshuffle_each_iteration=True)\
+            .shuffle(100, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = dataset.skip(train_dataset_size)\
             .cache()\
@@ -94,7 +94,6 @@ def train_model(args):
 
         train_dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                         eval(configs[IMG_SIZE]))\
-            .cache()\
             .shuffle(100, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],

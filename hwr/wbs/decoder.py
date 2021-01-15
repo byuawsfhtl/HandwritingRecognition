@@ -73,7 +73,7 @@ class WordBeamSearch:
         for sequence in batch:
             best_beam_batch.append(self.wbs_single_instance(sequence))
 
-        return tf.constant(best_beam_batch, dtype=tf.int32)
+        return tf.constant(best_beam_batch, dtype=tf.int64)
 
     def __call__(self, batch):
         """

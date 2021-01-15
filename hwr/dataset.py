@@ -1,9 +1,7 @@
 import os
 
 import tensorflow as tf
-import numpy as np
 import pandas as pd
-from PIL import Image
 
 # The default list of characters used in the recognition model
 DEFAULT_CHARS = ' !"#$%&\'()*+,-./0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`abcdefghijklmnopqrstuvwxyz|~£§¨«¬\xad' \
@@ -41,9 +39,9 @@ def get_char2idx(charset):
     char2idx = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
             keys=tf.constant(chars, dtype=tf.string),
-            values=tf.constant(indices, dtype=tf.int32),
+            values=tf.constant(indices, dtype=tf.int64),
             key_dtype=tf.string,
-            value_dtype=tf.int32
+            value_dtype=tf.int64
         ),
         default_value=0,
         name='char2idx_lookup'
@@ -65,9 +63,9 @@ def get_idx2char(charset):
 
     idx2char = tf.lookup.StaticHashTable(
         tf.lookup.KeyValueTensorInitializer(
-            keys=tf.constant(indices, dtype=tf.int32),
+            keys=tf.constant(indices, dtype=tf.int64),
             values=tf.constant(chars, dtype=tf.string),
-            key_dtype=tf.int32,
+            key_dtype=tf.int64,
             value_dtype=tf.string
         ),
         default_value='',
@@ -88,7 +86,7 @@ def pad_or_truncate(t, sequence_size=128):
     dim = tf.size(t)
     return tf.cond(tf.equal(dim, sequence_size), lambda: t,
                    lambda: tf.cond(tf.greater(dim, sequence_size), lambda: tf.slice(t, [0], [sequence_size]),
-                                   lambda: tf.concat([t, tf.zeros(sequence_size - dim, dtype=tf.int32)], 0)))
+                                   lambda: tf.concat([t, tf.zeros(sequence_size - dim, dtype=tf.int64)], 0)))
 
 
 def merge_repeating_values(t):
@@ -115,7 +113,7 @@ def str_to_idxs(string, char2idx, sequence_size):
     :param sequence_size: The final sequence length
     :return: The converted string now in its integer representation
     """
-    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.unicode_split(string, 'UTF-8'), dtype=tf.int32)
+    idxs = tf.map_fn(lambda char: char2idx.lookup(char), tf.strings.unicode_split(string, 'UTF-8'), dtype=tf.int64)
     return pad_or_truncate(idxs, sequence_size=sequence_size)
 
 
@@ -147,7 +145,7 @@ def str_to_idxs_batch(batch, char2idx, sequence_size=128):
     :return: The converted strings now in its integer representation
     """
     return tf.map_fn(lambda string: str_to_idxs(string, char2idx, sequence_size=sequence_size), batch,
-                     dtype=tf.int32)
+                     dtype=tf.int64)
 
 
 def idxs_to_str_batch(batch, idx2char, merge_repeated=True):
@@ -196,37 +194,6 @@ def img_resize_with_pad(img_tensor, desired_size, pad_value=255):
     return img_padded
 
 
-def img_resize_with_pad_numpy(img, desired_size, pad_value=255):
-    """
-    Same as img_resize_with_pad, except pillow and numpy are used to resize and pad the image
-    compared to the default tensorflow image operations.
-
-    :param img_tensor: The pillow image to be resized and padded
-    :param desired_size: The desired size (height, width)
-    :param pad_value: The value to pad the tensor with
-    """
-    img_size = np.array(img).shape
-
-    img_ratio = img_size[0] / img_size[1]
-    desired_ratio = desired_size[0] / desired_size[1]
-
-    if img_ratio >= desired_ratio:  # Solve by height
-      new_height = desired_size[0]
-      new_width = int(desired_size[0] // img_ratio)
-    else:  # Solve by width
-      new_height = int(desired_size[1] * img_ratio)
-      new_width = desired_size[1]
-
-    img = np.array(img.resize((new_width, new_height)))
-
-    border_top = desired_size[0] - new_height
-    border_right = desired_size[1] - new_width
-
-    img = np.pad(img, [(border_top, 0), (0, border_right), (0, 0)], mode='constant', constant_values=pad_value)
-
-    return img
-
-
 def read_and_encode_image(img_path, img_size=(64, 1024)):
     """
     Used by both encode_img_and_transcription (training) and encode_img_with_name (inference). This method
@@ -245,23 +212,6 @@ def read_and_encode_image(img_path, img_size=(64, 1024)):
     return img
 
 
-def read_and_encode_image_pillow(img_path, img_size=(64, 1024)):
-    """
-    Same as read_and_encode_image function except using pillow to load the image rather than
-    default tensorflow image operations
-
-    :param img_path: The path to the desired image
-    :param img_size: The size of the image after resizing/padding
-    :return: The encoded image in its tensor/integer representation
-    """
-    img = Image.open(img_path.numpy())
-    img = img.convert('RGB')
-    img = img_resize_with_pad_numpy(img, img_size.numpy())
-    img = tf.constant(img, dtype=tf.float32)
-
-    return img
-
-
 def encode_img_and_transcription(img_path, transcription, char2idx, sequence_size=128, img_size: tuple = (64, 1024)):
     """
     The actual function to map image paths and string transcriptions to its tensor/integer representation.
@@ -273,8 +223,7 @@ def encode_img_and_transcription(img_path, transcription, char2idx, sequence_siz
     :param img_size: The size of the image after resizing/padding
     :return: The image and transcription in their tensor/integer representations.
     """
-    img = tf.py_function(read_and_encode_image_pillow, [img_path, img_size], [tf.float32])
-    img = tf.squeeze(img, 0)
+    img = read_and_encode_image(img_path, img_size=img_size)
     line = str_to_idxs(transcription, char2idx, sequence_size)
     return img, line
 
@@ -288,7 +237,6 @@ def encode_img_with_name(img_path, img_size=(64, 1024)):
     :return: The encoded image and image path
     """
     img = read_and_encode_image(img_path, img_size)
-
     return img, img_path
 
 
