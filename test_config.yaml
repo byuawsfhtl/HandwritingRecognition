@@ -27,7 +27,7 @@ charset:
 show_predictions: True
 
 # Non-Punctuation character set (wbs_word_charset: '12345'). If not characters are specified, the default is used.
-wbs_punctuation:
+wbs_word_charset:
 # Beam width use for wbs algorithm
 wbs_beam_width: 15
 

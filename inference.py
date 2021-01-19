@@ -27,7 +27,7 @@ CHARSET = 'charset'
 
 USE_WBS = 'use_wbs'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
-WBS_PUNCTUATION = 'wbs_punctuation'
+WBS_WORD_CHARSET = 'wbs_word_charset'
 
 
 def inference(args):
@@ -50,7 +50,7 @@ def inference(args):
                If no characters are specified, the default is used.
     * use_wbs: Boolean indicating whether or not to use Word Beam Search for decoding. If False, best path is used.
     * wbs_beam_width: The beam width needed for the word beam search algorithm
-    * wbs_punctuation: String containing all punctuation characters
+    * wbs_word_charset: String containing all characters observed in words (non-word_charset)
 
     :param args: Command line arguments
     :return: None
@@ -69,7 +69,7 @@ def inference(args):
 
     # Load our character set
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
-    punctuation = configs[WBS_PUNCTUATION] if configs[WBS_PUNCTUATION] else ds.DEFAULT_PUNCTUATION
+    word_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
     idx2char = ds.get_idx2char(charset=charset)
     char2idx = ds.get_char2idx(charset=charset)
 
@@ -94,7 +94,7 @@ def inference(args):
         DictionaryLoader.english_words(include_cased=True)
 
     if configs[USE_WBS]:
-        wbs = WordBeamSearch(corpus, punctuation, configs[WBS_BEAM_WIDTH], char2idx)
+        wbs = WordBeamSearch(corpus, charset, word_charset, configs[WBS_BEAM_WIDTH])
 
     # Keep track of all inferences in list of tuples
     inferences = []

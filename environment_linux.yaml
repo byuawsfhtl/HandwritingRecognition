@@ -3,6 +3,7 @@ channels:
 - defaults
 - anaconda
 - conda-forge
+- byu-handwriting-lab
 dependencies:
 - python=3.7.3
 - anaconda::numpy=1.19.1
@@ -12,3 +13,4 @@ dependencies:
 - conda-forge::matplotlib=3.2.1
 - anaconda::tqdm=4.31.1
 - conda-forge::editdistance=0.5.3
+- byu-handwriting-lab::word_beam_search=0.1
