@@ -71,7 +71,6 @@ def inference(args):
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
     word_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
     idx2char = ds.get_idx2char(charset=charset)
-    char2idx = ds.get_char2idx(charset=charset)
 
     if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
         model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
