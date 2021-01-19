@@ -109,11 +109,9 @@ Configuration File Arguments:
 * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
 * charset: String including all characters to be represented in the network (abcdef1234...)
            If no characters are specified, the default is used.
-      
+* use_wbs: Boolean indicating whether or not word beam search should be used for decoding. If false, best-path is used.
 * wbs_beam_width: The beam width needed for the word beam search algorithm
-* wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
-* wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
-* wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
+* wbs_word_charset: String containing all characters observed in words (non-word_charset)
 
 
 Inference Example:
@@ -153,10 +151,9 @@ Command Line Arguments:
 * charset: String including all characters to be represented in the network (abcdef1234...)
            If no characters are specified, the default is used.
 * show_predictions: Boolean indicating whether or not to print the bp/wbs predictions along with label
+* use_wbs: Boolean indicating whether or not word beam search should be used for decoding. If false, best-path is used.
 * wbs_beam_width: The beam width needed for the word beam search algorithm
-* wbs_os_type: The operating system type -- options: ['linux', 'mac']. Windows not supported for Word Beam Search.
-* wbs_gpu: Boolean indicating whether or not to use the GPU version of WBS.
-* wbs_multithreaded: Boolean indicating whether or not to use 8 parallel threads during WBS decoding.
+* wbs_word_charset: String containing all characters observed in words (non-word_charset)
 
 Test Example:
 * We can use the same images/labels.csv files as are used for training to test the model. This data is included in the
