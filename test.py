@@ -26,7 +26,7 @@ IMG_SIZE = 'img_size'
 CHARSET = 'charset'
 SHOW_PREDICTIONS = 'show_predictions'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
-WBS_PUNCTUATION = 'wbs_punctuation'
+WBS_WORD_CHARSET = 'wbs_word_charset'
 
 
 def test(args):
@@ -49,7 +49,7 @@ def test(args):
                If no characters are specified, the default is used.
     * show_predictions: Boolean indicating whether or not to print the bp/wbs predictions along with label
     * wbs_beam_width: The beam width needed for the word beam search algorithm
-    * wbs_punctuation: String containing all punctuation characters
+    * wbs_word_charset: String containing all word_charset characters
     """
     # Ensure the train config file is included
     if len(args) == 0:
@@ -61,7 +61,7 @@ def test(args):
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
-    punctuation = configs[WBS_PUNCTUATION] if configs[WBS_PUNCTUATION] else ds.DEFAULT_PUNCTUATION
+    word_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
     char2idx = ds.get_char2idx(charset=charset)
     idx2char = ds.get_idx2char(charset=charset)
 
@@ -93,7 +93,7 @@ def test(args):
     corpus = DictionaryLoader.french_words(include_cased=True)
 
     # Create the word beam search decoder
-    wbs = WordBeamSearch(corpus, punctuation, configs[WBS_BEAM_WIDTH], char2idx)
+    wbs = WordBeamSearch(corpus, charset, word_charset, configs[WBS_BEAM_WIDTH])
 
     # Create lists to store labels and predictions for various decoding methods
     bp_predictions = []

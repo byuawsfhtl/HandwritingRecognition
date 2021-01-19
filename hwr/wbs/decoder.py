@@ -1,13 +1,54 @@
 import tensorflow as tf
-import numpy as np
+
+from word_beam_search import WordBeamSearch as WbsPyBind
 
 from hwr.wbs.tree import PrefixTree
 
 
 class WordBeamSearch:
     """
-    The Word-Beam-Search decoding algorithm. This decoder constrains the model's output to dictionary words
-    while allowing for arbitrary punctuation.
+    Wrapper for the Word-Beam-Search object as given in the word_beam_search package. This decoder constrains the
+    model's output to dictionary words while allowing for arbitrary punctuation.
+
+    See CTC-Word-Beam-Search GitHub Readme for more details:
+    https://github.com/githubharald/CTCWordBeamSearch
+    """
+    def __init__(self, corpus, chars, word_chars, beam_width=15, mode='Words', lm_smoothing=0.0):
+        """
+        :param corpus: String with space delimited words representing the possible words for decoding
+        :param chars: The possible characters that the model can predict
+        :param word_chars: The non-punctuation characters the model can predict
+        :param beam_width: The beam_width for the word beam search algorithm
+        :param mode: One of the following ['Words', 'NGrams', 'NGramsForecast', 'NGramsForecastAndSample']
+        :param lm_smoothing: Language model smoothing value
+        """
+        self.decoder = WbsPyBind(beam_width, mode, lm_smoothing, corpus, chars, word_chars)
+
+    def decode(self, logits):
+        """
+        Decode the model output using WordBeamSearch
+
+        :param logits: The model output logits as tensor
+        :return: The decoded model output as tensor
+        """
+        output = tf.nn.softmax(logits).numpy()
+        pred = self.decoder.compute(output)
+        return tf.constant(pred, dtype=tf.int64)
+
+    def __call__(self, logits):
+        """
+        Decode the model output using WordBeamSearch
+
+        :param logits: The model output logits as tensor
+        :return: The decoded model output as tensor
+        """
+        return self.decode(logits)
+
+
+class PythonWordBeamSearch:
+    """
+    The Word-Beam-Search decoding algorithm written in python. This decoder constrains the model's output to dictionary
+    words while allowing for arbitrary punctuation.
 
     See CTC-Word-Beam-Search GitHub Readme for more details:
     https://github.com/githubharald/CTCWordBeamSearch

@@ -2,12 +2,6 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from hwr.metrics import ErrorRates
-from hwr.util import model_inference, bp_decode
-from hwr.wbs.decoder import WordBeamSearch
-
-import hwr.dataset as ds
-
 
 class ModelTrainer:
     """
@@ -179,54 +173,3 @@ class ModelTrainer:
         :return: The model and train/val losses as tuple
         """
         return self.train()
-
-
-class ModelMetrics:
-    """
-    ModelMetrics
-
-    Used to provide metrics for a trained model.
-    """
-
-    def __init__(self, model, dataset, idx2char, wbs_decode=False):
-        """
-        :param model: The trained model to be tested
-        :param dataset: The dataset likely in tf.data.dataset or Keras Sequence format
-        :param idx2char:
-        :param wbs_decode:
-        """
-        self.model = model
-        self.dataset = dataset
-        self.idx2char = idx2char
-        self.wbs_decode = wbs_decode
-
-        if self.wbs_decode:
-            self.decoder = WordBeamSearch(25, 'Words', 0.0,)
-
-    def get_error_rates(self):
-        all_inferences = []
-        all_labels = []
-        for images, labels in self.dataset:
-            output = model_inference(self.model, images)
-            predictions = bp_decode(output)
-
-            str_predictions = ds.idxs_to_str_batch(predictions, self.idx2char, merge_repeated=True)
-            str_labels = ds.idxs_to_str_batch(labels, self.idx2char, merge_repeated=False)
-
-            # Ensure we are working with unicode strings rather than byte strings
-            str_predictions = [s.decode('utf8') if type(s) == np.bytes_ or type(s) == bytes else s
-                               for s in str_predictions.numpy()]
-            str_labels = [s.decode('utf8') if type(s) == np.bytes_ or type(s) == bytes else s
-                          for s in str_labels.numpy()]
-
-            all_inferences.extend(str_predictions)
-            all_labels.extend(str_labels)
-
-        # Map all inferences/labels to update the error rates
-        rates = ErrorRates()
-
-        for y_true, y_pred in zip(all_labels, all_inferences):
-            rates.update(y_true, y_pred)
-            rates.update(y_true, y_pred)
-
-        return rates.get_error_rates()
