@@ -28,7 +28,7 @@ def possible_chars(args):
     words = ''
     for file_path in args:
         print('Loading ', file_path)
-        words += DictionaryLoader.from_file(file_path, include_cased=True) + ' '
+        words += DictionaryLoader.from_file(file_path, include_cased=False) + ' '
 
     chars = list(set(''.join(words)))
     chars = np.sort(chars)
