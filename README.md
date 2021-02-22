@@ -17,18 +17,11 @@ This project can be used by cloning the repository and running manually. However
 * Tqdm
 * EditDistance
 
-A .yaml file has been included that specifies the necessary dependencies. A conda environment can be
-created and activated by running the following commands:
+A .yaml file for each supported platform has been included that specifies the necessary dependencies. A
+conda environment for MacOS/Windows/Linux can be created and activated by running the following commands:
 
 ```
-conda env create -f environment.yaml
-conda activate hwr_env
-```
-
-If you are running on MacOS, you must use the MacOS-specific environment file: (This is due to the
-fact that Tensorflow does not support GPU/Cuda for MacOS)
-```
-conda env create -f environment_macos.yaml
+conda env create -f environment_linux.yaml  # or environment_macos.yaml, environment_windows.yaml
 conda activate hwr_env
 ```
 
