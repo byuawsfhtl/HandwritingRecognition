@@ -284,4 +284,4 @@ def get_encoded_inference_dataset_from_img_path(img_path, img_size):
     """
     return tf.data.Dataset.list_files(img_path + '/*', shuffle=False).map(
         lambda path: encode_img_with_name(path, img_size),
-        num_parallel_calls=tf.data.experimental.AUTOTUNE)\
+        num_parallel_calls=tf.data.experimental.AUTOTUNE))
