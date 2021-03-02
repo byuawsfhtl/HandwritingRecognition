@@ -12,6 +12,7 @@ from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
 
 IMG_PATH = 'img_path'
+IMG_PATH_SUBDIRS = 'img_path_subdirs'
 OUT_PATH = 'out_path'
 RECOGNITION_ARCHITECTURE = 'recognition_architecture'
 STD_GATEBLOCK_FILTERS = 'std_gateblock_filters'
@@ -42,6 +43,7 @@ def inference(args):
 
     Configuration File Arguments:
     * img_path: The path to the images to be inferred
+    * img_path_subdirs: Boolean whether or not to include subdirectories of img_path
     * out_path: The output path to the results of the inference
     * model_in: The path to the pre-trained model weights to be used during inference
     * img_size: The size which all images will be resized/padded for inference on the model
@@ -64,8 +66,8 @@ def inference(args):
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
     # Create the tensorflow dataset with images to be inferred
-    dataset = ds.get_encoded_inference_dataset_from_img_path(configs[IMG_PATH], eval(configs[IMG_SIZE]))\
-        .batch(configs[BATCH_SIZE])
+    dataset = ds.get_encoded_inference_dataset_from_img_path(configs[IMG_PATH], eval(configs[IMG_SIZE]),
+        configs[IMG_PATH_SUBDIRS]).batch(configs[BATCH_SIZE])
 
     # Load our character set
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
