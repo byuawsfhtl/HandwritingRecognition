@@ -5,7 +5,7 @@ data/*
 !data/example
 !data/example/labels.csv
 *.tfrecords
-*/test_images/*
+data/example/test_images/*
 *.sh
 slurm*
 **/.DS_Store

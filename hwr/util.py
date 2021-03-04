@@ -18,38 +18,43 @@ def model_inference(model, imgs):
 
 
 @tf.function
-def bp_decode(output):
+def bp_decode(output, axis=2):
     """
     Best-path decoding from raw model output.
 
     :param output: The model output, shape: (batch x sequence x classes)
+    :param axis: The axis to perform on the model output to perform best_path decoding
     :return: The output of the best-path decoding
     """
-    return tf.argmax(output, axis=2, output_type=tf.int64)
+    return tf.argmax(output, axis=axis, output_type=tf.int64)
+
+
+def merge_repeating_and_pad(single, seq_size):
+    single = merge_repeating_values(single)
+    single = tf.gather_nd(single, tf.where(single))
+    single = pad_or_truncate(single, sequence_size=seq_size)
+    return single
 
 
 def prediction_confidence(output, prediction):
     """
     Given the model output, give a confidence score for the given prediction
 
-    :param output: The model's output, shape: (sequence x num_classes)
-    :param prediction: The model's prediction, shape: (sequence)
-    :return: The confidence score
+    :param output: The model's output, shape: (batch x sequence x num_classes)
+    :param prediction: The model's prediction, shape: (batch x sequence)
+    :return: The confidence scores as tensor, shape(batch)
     """
     batch_size = output.shape[0]
     seq_size = output.shape[1]
 
-    values = merge_repeating_values(prediction)
-    mask = tf.not_equal(values, tf.constant(0, dtype=tf.int64))
-    unpadded_label = tf.boolean_mask(values, mask)
-    label = tf.expand_dims(pad_or_truncate(unpadded_label, sequence_size=seq_size), 0)
+    label = tf.map_fn(lambda single: merge_repeating_and_pad(single, seq_size), prediction)
 
     input_lengths = tf.constant(np.full(batch_size, seq_size))
     label_lengths = tf.math.count_nonzero(label, axis=1)
 
     loss = tf.nn.ctc_loss(label, output, label_lengths, input_lengths, logits_time_major=False)
 
-    probability = tf.exp(-loss)[0].numpy()
+    probability = tf.exp(-loss).numpy()
 
     return probability
 

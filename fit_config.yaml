@@ -1,0 +1,14 @@
+# The path to the dataset that a model must be fit to
+dataset_path: ./data/training/rimes_hwr_line_level/images
+# The path to pre-trained model weights
+model_in: ./data/model_weights/iam_hwr_line_level_model/run1
+# The path to store the model weights after training
+model_out: ./data/model_weights/trained_model/run1
+# The size which images will be resized given as height and width as tuple (height, width)
+img_size: (64, 1024)
+# String including the character set for the model (charset: abcd1234) If no characters are specified, the default is used.
+charset: " !\"#%&'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz{|}£¤§°²ÀÉàâçèéêëîôùûœſ€⊥𐌰𐌳𐌴𐌵𐌸𐌺𐌻𐌼𐌾𐍆𐍈"
+# The number of instances that will be selected actively during each training iteration
+num_active_instances: 3
+#
+active_sample_size: 3

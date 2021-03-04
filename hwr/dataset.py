@@ -282,6 +282,28 @@ def get_encoded_inference_dataset_from_img_path(img_path, img_size):
     :param img_size: The size of the image after resizing/padding (height, width)
     :return: The tf dataset containing encoded images and their respective string names
     """
-    return tf.data.Dataset.list_files(img_path + '/*', shuffle=False).map(
+    return get_encoded_inference_dataset_from_file_list(get_file_list(img_path), img_size)
+
+
+def get_encoded_inference_dataset_from_file_list(file_list, img_size):
+    """
+    Using the tf.data api, load all images from the desired path and return a dataset containing encoded images
+    and the image name (without path or extension information).
+
+    :param file_list: A tensorflow dataset containing the paths to the images to be inferred
+    :param img_size: The size of the image after resizing/padding (height, width)
+    :return: The tf dataset containing encoded images and their respective string names
+    """
+    return file_list.map(
         lambda path: encode_img_with_name(path, img_size),
-        num_parallel_calls=tf.data.experimental.AUTOTUNE)\
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)
+
+
+def get_file_list(img_path):
+    """
+    Lists all of the image files from the specified path that could be used for inference
+
+    :param img_path: The path to the directory with potential images to be inferred
+    :return: A tf dataset containing the file paths of all image files
+    """
+    return tf.data.Dataset.list_files(img_path + '/*', shuffle=False)
