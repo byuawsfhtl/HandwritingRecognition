@@ -2,6 +2,8 @@
 
 # The path to the images to be inferred
 img_path: ./data/example/test_images
+# Include subdirectories of img_path, if set to False any directories within img_path will be ignored
+img_path_subdirs: True
 # The output path to the results of the inference
 out_path: ./data/example/iam_inference.csv
 # Specify the recognition architecture. Available: ['flor', 'gtr']
