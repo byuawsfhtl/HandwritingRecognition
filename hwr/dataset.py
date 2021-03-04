@@ -273,33 +273,21 @@ def get_encoded_dataset_from_csv(csv_path, char2idx, max_seq_size, img_size):
         num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 
-def get_encoded_inference_dataset_from_img_path(img_path, img_size, subdirs=False):
+def get_encoded_inference_dataset_from_img_path(img_path, img_size, include_subdirs=False):
     """
     Using the tf.data api, load all images from the desired path and return a dataset containing encoded images
     and the image name (without path or extension information).
 
     :param img_path: The path to the directory containing images
     :param img_size: The size of the image after resizing/padding (height, width)
-    :param subdirs: Whether to include subdirectories of img_path, default is False
+    :param include_subdirs: Whether to include subdirectories of img_path, default is False
     :return: The tf dataset containing encoded images and their respective string names
     """
-    def _get_dirs(path):
-        with os.scandir(path) as iter:
-            return [entry.path for entry in iter if entry.is_dir()]
+    if include_subdirs:
+        # The first entry in each tuple returned from os.walk is the directory
+        dirs = [os.path.join(dir_tuple[0], '*.*') for dir_tuple in os.walk(img_path)]
+    else:
+        dirs = os.path.join(img_path, '*.*')
 
-    dataset = tf.data.Dataset.list_files(img_path + '/*.*', shuffle=False)
-
-    if subdirs:
-        list_of_dirs = _get_dirs(img_path)
-
-        index = 0
-        while index < len(list_of_dirs):
-            list_of_dirs.extend(_get_dirs(list_of_dirs[index]))
-            index += 1
-
-        for subdir in list_of_dirs:
-            dataset = dataset.concatenate(tf.data.Dataset.list_files(subdir + '/*.*', shuffle=False))
-
-    return dataset.map(
-        lambda path: encode_img_with_name(path, img_size),
-        num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    return tf.data.Dataset.list_files(dirs, shuffle=False).map(lambda path: encode_img_with_name(path, img_size),
+                                                               num_parallel_calls=tf.data.experimental.AUTOTUNE)
