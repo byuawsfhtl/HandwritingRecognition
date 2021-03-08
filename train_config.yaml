@@ -8,16 +8,6 @@ val_csv_path:
 # training set will contain 80% of the data, and validation 20%. The dataset is not shuffled before being split.
 split_train_size: 0.8
 
-# Specify the recognition architecture. Available: ['flor', 'gtr']
-recognition_architecture: flor
-# If using the gtr architecture, you can specify the number of filters here for each standard gateblock
-std_gateblock_filters: 512
-# If using the gtr architecture, you can specify the number of filters here for each pooling gateblock
-pooling_gateblock_filters: 128
-# If using the gtr architecture, you can specify the number of gateblocks required in the architecture
-num_gateblocks: 7
-# If using the gtr architecture, you can specify at which height the feature map must be when it is collapsed by avg pooling
-avg_pool_height: 2
 # The path to store the trained model weights
 model_out: ./data/model_weights/example_model/run1
 # The path to pre-trained model weights
@@ -34,7 +24,5 @@ max_seq_size: 128
 # The size which all images will be resized - (height, width)
 img_size: (64, 1024)
 
-# Whether or not to show graphs of the loss after training
-show_graphs: False  # Make sure True/False booleans are capitalized!
 # String including the character set for the model (charset: abcd1234) If no characters are specified, the default is used.
 charset:

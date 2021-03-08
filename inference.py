@@ -6,7 +6,7 @@ import yaml
 from tqdm import tqdm
 
 import hwr.dataset as ds
-from hwr.models import FlorRecognizer, GTRRecognizer
+from hwr.models import FlorRecognizer
 from hwr.util import model_inference, bp_decode
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
@@ -14,16 +14,10 @@ from hwr.wbs.decoder import WordBeamSearch
 IMG_PATH = 'img_path'
 IMG_PATH_SUBDIRS = 'img_path_subdirs'
 OUT_PATH = 'out_path'
-RECOGNITION_ARCHITECTURE = 'recognition_architecture'
-STD_GATEBLOCK_FILTERS = 'std_gateblock_filters'
-POOLING_GATEBLOCK_FILTERS = 'pooling_gateblock_filters'
-NUM_GATEBLOCKS = 'num_gateblocks'
-AVG_POOL_HEIGHT = 'avg_pool_height'
 MODEL_IN = 'model_in'
 IMG_SIZE = 'img_size'
 BATCH_SIZE = 'batch_size'
 MAX_SEQ_SIZE = 'max_seq_size'
-CONSOLE_OUT = 'console_out'
 CHARSET = 'charset'
 
 USE_WBS = 'use_wbs'
@@ -48,6 +42,7 @@ def inference(args):
     * model_in: The path to the pre-trained model weights to be used during inference
     * img_size: The size which all images will be resized/padded for inference on the model
     * batch_size: The batch size to be used when performing inference on the model (how many images inferred at once)
+    * max_seq_size: The max number of characters in a line-level transcription
     * charset: String including all characters to be represented in the network (abcdef1234...)
                If no characters are specified, the default is used.
     * use_wbs: Boolean indicating whether or not to use Word Beam Search for decoding. If False, best path is used.
@@ -67,25 +62,14 @@ def inference(args):
 
     # Create the tensorflow dataset with images to be inferred
     dataset = ds.get_encoded_inference_dataset_from_img_path(configs[IMG_PATH], eval(configs[IMG_SIZE]),
-        configs[IMG_PATH_SUBDIRS]).batch(configs[BATCH_SIZE])
+                                                             configs[IMG_PATH_SUBDIRS]).batch(configs[BATCH_SIZE])
 
     # Load our character set
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
     word_charset = configs[WBS_WORD_CHARSET] if configs[WBS_WORD_CHARSET] else ds.DEFAULT_NON_PUNCTUATION
     idx2char = ds.get_idx2char(charset=charset)
 
-    if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
-        model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
-                              sequence_size=configs[MAX_SEQ_SIZE],
-                              vocabulary_size=len(charset) + 1, std_gateblock_filters=configs[STD_GATEBLOCK_FILTERS],
-                              pooling_gateblock_filters=configs[POOLING_GATEBLOCK_FILTERS],
-                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_HEIGHT])
-    elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
-        model = FlorRecognizer(vocabulary_size=len(charset) + 1)
-    else:
-        raise Exception('Unsupported recognition architecture: {}. Please choose a supported architecture: {}.'.format(
-            configs[RECOGNITION_ARCHITECTURE], '["flor", "gtr"]'))
-
+    model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:
         model.load_weights(configs[MODEL_IN])
 

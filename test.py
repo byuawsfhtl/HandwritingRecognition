@@ -14,11 +14,6 @@ from hwr.wbs.decoder import WordBeamSearch
 
 CSV_PATH = 'csv_path'
 DATASET_EVAL_SIZE = 'dataset_eval_size'
-RECOGNITION_ARCHITECTURE = 'recognition_architecture'
-STD_GATEBLOCK_FILTERS = 'std_gateblock_filters'
-POOLING_GATEBLOCK_FILTERS = 'pooling_gateblock_filters'
-NUM_GATEBLOCKS = 'num_gateblocks'
-AVG_POOL_HEIGHT = 'avg_pool_height'
 MODEL_IN = 'model_in'
 BATCH_SIZE = 'batch_size'
 MAX_SEQ_SIZE = 'max_seq_size'
@@ -73,18 +68,7 @@ def test(args):
     # Recalculate dataset size after skipping part of the dataset as specified by dataset_eval_size parameter
     dataset_size = dataset_size - int(dataset_size * (1 - configs[DATASET_EVAL_SIZE]))
 
-    if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
-        model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
-                              sequence_size=configs[MAX_SEQ_SIZE],
-                              vocabulary_size=len(charset) + 1, std_gateblock_filters=configs[STD_GATEBLOCK_FILTERS],
-                              pooling_gateblock_filters=configs[POOLING_GATEBLOCK_FILTERS],
-                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_HEIGHT])
-    elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
-        model = FlorRecognizer(vocabulary_size=len(charset) + 1)
-    else:
-        raise Exception('Unsupported recognition architecture: {}. Please choose a supported architecture: {}.'.format(
-            configs[RECOGNITION_ARCHITECTURE], '["flor", "gtr"]'))
-
+    model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:
         model.load_weights(configs[MODEL_IN])
 

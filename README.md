@@ -61,7 +61,6 @@ Configuration File Arguments:
 * learning_rate: The learning rate the optimizer uses during training
 * max_seq_size: The max number of characters in a line-level transcription
 * img_size: The size which all images will be resized for training
-* show_graphs: Whether or not to show graphs of the loss after training
 * charset: String including all characters to be represented in the network (abcdef1234...)
            If no characters are specified, the default is used.
 
@@ -96,6 +95,7 @@ Command Line Arguments:
 
 Configuration File Arguments:
 * img_path: The path to the images to be inferred
+* img_path_subdirs: Boolean whether or not to include subdirectories of img_path
 * out_path: The output path to the results of the inference
 * model_in: The path to the pre-trained model weights to be used during inference
 * img_size: The size which all images will be resized/padded for inference on the model

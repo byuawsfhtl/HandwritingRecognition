@@ -1,20 +1,14 @@
 import sys
 
-import matplotlib.pyplot as plt
 import yaml
 
 import hwr.dataset as ds
-from hwr.models import FlorRecognizer, GTRRecognizer
+from hwr.models import FlorRecognizer
 from hwr.training import ModelTrainer
 
 TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
 SPLIT_TRAIN_SIZE = 'split_train_size'
-RECOGNITION_ARCHITECTURE = 'recognition_architecture'
-STD_GATEBLOCK_FILTERS = 'std_gateblock_filters'
-POOLING_GATEBLOCK_FILTERS = 'pooling_gateblock_filters'
-NUM_GATEBLOCKS = 'num_gateblocks'
-AVG_POOL_HEIGHT = 'avg_pool_height'
 MODEL_OUT = 'model_out'
 MODEL_IN = 'model_in'
 EPOCHS = 'epochs'
@@ -22,7 +16,6 @@ BATCH_SIZE = 'batch_size'
 LEARNING_RATE = 'learning_rate'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
-SHOW_GRAPHS = 'show_graphs'
 CHARSET = 'charset'
 
 
@@ -52,7 +45,6 @@ def train_model(args):
     * learning_rate: The learning rate the optimizer uses during training
     * max_seq_size: The max number of characters in a line-level transcription
     * img_size: The size which all images will be resized for training
-    * show_graphs: Whether or not to show graphs of the loss after training
     * charset: String including all characters to be represented in the network (abcdef1234...)
                If no characters are specified, the default is used.
 
@@ -98,18 +90,7 @@ def train_model(args):
                                                       eval(configs[IMG_SIZE]))\
             .batch(configs[BATCH_SIZE])
 
-    if configs[RECOGNITION_ARCHITECTURE] == 'gtr':
-        model = GTRRecognizer(eval(configs[IMG_SIZE])[0], eval(configs[IMG_SIZE])[1],
-                              sequence_size=configs[MAX_SEQ_SIZE],
-                              vocabulary_size=len(charset) + 1, std_gateblock_filters=configs[STD_GATEBLOCK_FILTERS],
-                              pooling_gateblock_filters=configs[POOLING_GATEBLOCK_FILTERS],
-                              num_gateblocks=configs[NUM_GATEBLOCKS], avg_pool_height=configs[AVG_POOL_HEIGHT])
-    elif configs[RECOGNITION_ARCHITECTURE] == 'flor':
-        model = FlorRecognizer(vocabulary_size=len(charset) + 1)
-    else:
-        raise Exception('Unsupported recognition architecture: {}. Please choose a supported architecture: {}.'.format(
-            configs[RECOGNITION_ARCHITECTURE], '["flor", "gtr"]'))
-
+    model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:
         model.load_weights(configs[MODEL_IN])
 
@@ -122,26 +103,6 @@ def train_model(args):
     # Print the losses over the course of training
     print('Train Losses:', losses[0])
     print('Val Losses:', losses[1])
-
-    # Print loss graph if command line argument specified it
-    if configs[SHOW_GRAPHS]:
-        show_loss_graph(losses[0], losses[1])
-
-
-def show_loss_graph(train_losses, val_losses):
-    """
-    Creates a graph showing the loss curve over time.
-
-    :param train_losses: list of the losses on the training set per epoch
-    :param val_losses: list of the losses on the validation set per epoch
-    """
-    plt.title('Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.plot(train_losses, label='Train')
-    plt.plot(val_losses, label='Val')
-    plt.legend()
-    plt.show()
 
 
 if __name__ == '__main__':
