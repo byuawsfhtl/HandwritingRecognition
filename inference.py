@@ -23,6 +23,7 @@ CHARSET = 'charset'
 USE_WBS = 'use_wbs'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
 WBS_WORD_CHARSET = 'wbs_word_charset'
+WBS_DICTIONARY = 'wbs_beam_dictionary_path'
 
 
 def inference(args):
@@ -48,6 +49,8 @@ def inference(args):
     * use_wbs: Boolean indicating whether or not to use Word Beam Search for decoding. If False, best path is used.
     * wbs_beam_width: The beam width needed for the word beam search algorithm
     * wbs_word_charset: String containing all characters observed in words (non-word_charset)
+    * wbs_beam_dictionary_path: A path to a file containing a list of words that the wbs should constrain to
+                                If none given wbs will use the default dictionary
 
     :param args: Command line arguments
     :return: None
@@ -73,10 +76,12 @@ def inference(args):
     if configs[MODEL_IN]:
         model.load_weights(configs[MODEL_IN])
 
-    # Corpus creation. Currently, this is a manual process of loading in specific dictionaries. Enhancements will be
-    # added later to allow for custom dictionaries to be loaded.
-    corpus = DictionaryLoader.ascii_names(include_cased=True) + '\n' +\
-        DictionaryLoader.english_words(include_cased=True)
+    # Corpus creation. Currently, this is a manual process of loading in specific dictionaries.
+    if configs[WBS_DICTIONARY]:
+        corpus = DictionaryLoader.from_file(configs[WBS_DICTIONARY], include_cased=True)
+    else:
+        corpus = DictionaryLoader.ascii_names(include_cased=True) + '\n' +\
+            DictionaryLoader.english_words(include_cased=True)
 
     if configs[USE_WBS]:
         wbs = WordBeamSearch(corpus, charset, word_charset, configs[WBS_BEAM_WIDTH])
