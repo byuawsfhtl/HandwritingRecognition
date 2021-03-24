@@ -79,7 +79,8 @@ def test(args):
     if configs[WBS_DICTIONARY]:
         corpus = DictionaryLoader.from_file(configs[WBS_DICTIONARY], include_cased=True)
     else:
-        corpus = DictionaryLoader.french_words(include_cased=True)
+        corpus = DictionaryLoader.ascii_names(include_cased=True) + '\n' +\
+            DictionaryLoader.english_words(include_cased=True)
 
     # Create the word beam search decoder
     wbs = WordBeamSearch(corpus, charset, word_charset, configs[WBS_BEAM_WIDTH])
