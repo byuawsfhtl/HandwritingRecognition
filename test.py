@@ -22,7 +22,7 @@ CHARSET = 'charset'
 SHOW_PREDICTIONS = 'show_predictions'
 WBS_BEAM_WIDTH = 'wbs_beam_width'
 WBS_WORD_CHARSET = 'wbs_word_charset'
-WBS_DICTIONARY = 'wbs_beam_dictionary_path'
+WBS_DICTIONARY = 'wbs_dictionary_path'
 
 
 def test(args):
@@ -46,8 +46,8 @@ def test(args):
     * show_predictions: Boolean indicating whether or not to print the bp/wbs predictions along with label
     * wbs_beam_width: The beam width needed for the word beam search algorithm
     * wbs_word_charset: String containing all word_charset characters
-    * wbs_beam_dictionary_path: A path to a file containing a list of words that the wbs should constrain to
-                                If none given wbs will use the default dictionary
+    * wbs_dictionary_path: A path to a file containing a list of words that the wbs should constrain to
+                           If none given wbs will use the default dictionary
     """
     # Ensure the train config file is included
     if len(args) == 0:
