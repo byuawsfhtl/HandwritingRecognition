@@ -105,6 +105,7 @@ Configuration File Arguments:
 * use_wbs: Boolean indicating whether or not word beam search should be used for decoding. If false, best-path is used.
 * wbs_beam_width: The beam width needed for the word beam search algorithm
 * wbs_word_charset: String containing all characters observed in words (non-word_charset)
+* wbs_dictionary_path: A path to a file containing a list of words that the wbs should constrain to. If none given wbs will use the default dictionary
 
 
 Inference Example:
@@ -147,6 +148,7 @@ Command Line Arguments:
 * use_wbs: Boolean indicating whether or not word beam search should be used for decoding. If false, best-path is used.
 * wbs_beam_width: The beam width needed for the word beam search algorithm
 * wbs_word_charset: String containing all characters observed in words (non-word_charset)
+* wbs_dictionary_path: A path to a file containing a list of words that the wbs should constrain to. If none given wbs will use the default dictionary
 
 Test Example:
 * We can use the same images/labels.csv files as are used for training to test the model. This data is included in the
