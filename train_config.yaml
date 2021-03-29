@@ -7,6 +7,8 @@ val_csv_path:
 # The ratio used to determine the size of the train/validation split. If split_train_size is set to 0.8, then the
 # training set will contain 80% of the data, and validation 20%. The dataset is not shuffled before being split.
 split_train_size: 0.8
+# Apply data augmentation to the training dataset
+augmentation: True
 
 # The path to store the trained model weights
 model_out: ./data/model_weights/example_model/run1
@@ -16,7 +18,7 @@ model_in:
 # The number of epochs to train
 epochs: 100
 # The number of images in a mini-batch
-batch_size: 1
+batch_size: 10
 # The learning rate the optimizer uses during training
 learning_rate: 0.001  # DO NOT use scientific notation! Pyyaml interprets scientific notation as string.
 # The max number of characters in a line-level transcription
