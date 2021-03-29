@@ -363,5 +363,5 @@ def double_batch_bleed_through(img):
     rolled = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0) # roll on batch dimensions
     rolled2 = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0) # roll on batch dimensions
     rolled = tf.concat([rolled, rolled2], 1)
-    rolled = tf.slice(rolled, [0, tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), 0, 0], tf.shape(rolled2))
+    rolled = tf.slice(rolled, [0, tf.random.uniform(shape=[], maxval=tf.shape(rolled)[1] - tf.shape(img)[1], dtype=tf.int32), 0, 0], tf.shape(img))
     return tf.minimum(img, reverse_and_lighten(rolled))
