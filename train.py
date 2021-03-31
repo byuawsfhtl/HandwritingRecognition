@@ -17,6 +17,7 @@ LEARNING_RATE = 'learning_rate'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 CHARSET = 'charset'
+INCLUDE_AUG = 'augmentation'
 
 
 def train_model(args):
@@ -72,11 +73,11 @@ def train_model(args):
 
         dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                   eval(configs[IMG_SIZE]))
-        train_dataset = dataset.take(train_dataset_size)\
+        train_dataset = dataset.take(train_dataset_size).cache("train.cache")\
             .shuffle(100, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = dataset.skip(train_dataset_size)\
-            .batch(configs[BATCH_SIZE])
+            .batch(configs[BATCH_SIZE]).cache("validation.cache")
 
     else:  # Use the data as given in the train/validation csv files - no additional splits performed
         train_dataset_size = ds.get_dataset_size(configs[TRAIN_CSV_PATH])
@@ -84,11 +85,14 @@ def train_model(args):
 
         train_dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                         eval(configs[IMG_SIZE]))\
-            .shuffle(100, reshuffle_each_iteration=True)\
+            .cache("train.cache").shuffle(100, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                       eval(configs[IMG_SIZE]))\
-            .batch(configs[BATCH_SIZE])
+            .batch(configs[BATCH_SIZE]).cache("validation.cache")
+
+    if configs[INCLUDE_AUG]:
+        train_dataset = ds.augment_batched_dataset(train_dataset)
 
     model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:
