@@ -1,3 +1,6 @@
+import os
+import glob
+
 import tensorflow as tf
 import numpy as np
 
@@ -104,3 +107,16 @@ def find_start_and_end_from_segment(word_segment, prev_index, buffer):
     maximum = prev_index + tf.reduce_max(non_blank_indices).numpy()
 
     return minimum, maximum + buffer
+
+
+def remove_file_with_wildcard(path):
+    """
+    Given a path with wildcards, delete all files that match the expression.
+
+    @param path: The filepath with wildcards
+    @return: None
+    """
+    filelist = glob.glob(path)
+
+    for filepath in filelist:
+        os.remove(filepath)

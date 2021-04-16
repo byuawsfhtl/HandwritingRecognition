@@ -7,8 +7,17 @@ val_csv_path:
 # The ratio used to determine the size of the train/validation split. If split_train_size is set to 0.8, then the
 # training set will contain 80% of the data, and validation 20%. The dataset is not shuffled before being split.
 split_train_size: 0.8
-# Apply data augmentation to the training dataset
-augmentation: True
+
+# Whether or not to apply the noise augmentation to the training dataset
+apply_noise_augmentation: False
+# Whether or not to apply the bleedthrough augmentation to the training dataset
+apply_bleedthrough_augmentation: False
+# Whether or not to apply the grid warp augmentation to the training dataset
+apply_grid_warp_augmentation: True
+# The interval in pixels between control points in the grid warp augmentation
+grid_warp_interval: 16
+# The standard deviation required in the grid warp augmentation
+grid_warp_stddev: 2
 
 # The path to store the trained model weights
 model_out: ./data/model_weights/example_model/run1

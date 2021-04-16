@@ -3,8 +3,10 @@ import sys
 import yaml
 
 import hwr.dataset as ds
+import hwr.augmentation as aug
 from hwr.models import FlorRecognizer
 from hwr.training import ModelTrainer
+from hwr.util import remove_file_with_wildcard
 
 TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
@@ -17,7 +19,11 @@ LEARNING_RATE = 'learning_rate'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 CHARSET = 'charset'
-INCLUDE_AUG = 'augmentation'
+APPLY_NOISE_AUGMENTATION = 'apply_noise_augmentation'
+APPLY_BLEEDTHROUGH_AUGMENTATION = 'apply_bleedthrough_augmentation'
+APPLY_GRID_WARP_AUGMENTATION = 'apply_grid_warp_augmentation'
+GRID_WARP_INTERVAL = 'grid_warp_interval'
+GRID_WARP_STDDEV = 'grid_warp_stddev'
 
 
 def train_model(args):
@@ -39,6 +45,11 @@ def train_model(args):
                         to 0.8, then the training set will contain 80% of the data, and validation 20%. The dataset is
                         not shuffled before being split. If a val_csv_path is given, this parameter will not be used.
                         Otherwise, the training set will be split using this parameter.
+    * apply_noise_augmentation: Whether or not to apply the noise augmentation to the training dataset
+    * apply_bleedthrough_augmentation: Whether or not to apply the bleedthrough augmentation to the training dataset
+    * apply_grid_warp_augmentation: Whether or not to apply the grid warp augmentation to the training dataset
+    * grid_warp_interval: The interval in pixels between control points in the grid warp augmentation
+    * grid_warp_stddev: The standard deviation required in the grid warp augmentation
     * model_out: The path to store the trained model weights after training
     * model_in: The path to pre-trained model weights to be loaded before training begins
     * epochs: The number of epochs to train
@@ -59,6 +70,10 @@ def train_model(args):
     # Read arguments from the config file:
     with open(args[0]) as f:
         configs = yaml.load(f, Loader=yaml.FullLoader)
+
+    # Remove previous cache files if they currently exist
+    remove_file_with_wildcard("train.cache.*")
+    remove_file_with_wildcard("validation.cache.*")
 
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
     char2idx = ds.get_char2idx(charset=charset)
@@ -91,8 +106,13 @@ def train_model(args):
                                                       eval(configs[IMG_SIZE]))\
             .batch(configs[BATCH_SIZE]).cache("validation.cache")
 
-    if configs[INCLUDE_AUG]:
-        train_dataset = ds.augment_batched_dataset(train_dataset)
+    if configs[APPLY_GRID_WARP_AUGMENTATION] or configs[APPLY_BLEEDTHROUGH_AUGMENTATION] \
+            or configs[APPLY_NOISE_AUGMENTATION]:
+        train_dataset = aug.augment_batched_dataset(train_dataset, random_noise=configs[APPLY_NOISE_AUGMENTATION],
+                                                    bleedthrough=configs[APPLY_BLEEDTHROUGH_AUGMENTATION],
+                                                    random_grid_warp=configs[APPLY_GRID_WARP_AUGMENTATION],
+                                                    rgw_interval=configs.get(GRID_WARP_INTERVAL, None),
+                                                    rgw_stddev=configs.get(GRID_WARP_STDDEV, None))
 
     model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:

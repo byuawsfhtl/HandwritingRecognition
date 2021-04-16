@@ -54,6 +54,11 @@ Configuration File Arguments:
                     to 0.8, then the training set will contain 80% of the data, and validation 20%. The dataset is
                     not shuffled before being split. If a val_csv_path is given, this parameter will not be used.
                     Otherwise, the training set will be split using this parameter.
+* apply_noise_augmentation: Whether or not to apply the noise augmentation to the training dataset
+* apply_bleedthrough_augmentation: Whether or not to apply the bleedthrough augmentation to the training dataset
+* apply_grid_warp_augmentation: Whether or not to apply the grid warp augmentation to the training dataset
+* grid_warp_interval: The interval in pixels between control points in the grid warp augmentation
+* grid_warp_stddev: The standard deviation required in the grid warp augmentation                   
 * model_out: The path to store the trained model weights after training
 * model_in: The path to pre-trained model weights to be loaded before training begins
 * epochs: The number of epochs to train
