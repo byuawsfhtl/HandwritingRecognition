@@ -3,6 +3,7 @@ import sys
 import yaml
 
 import hwr.dataset as ds
+import hwr.augmentation as aug
 from hwr.models import FlorRecognizer
 from hwr.training import ModelTrainer
 
@@ -92,7 +93,7 @@ def train_model(args):
             .batch(configs[BATCH_SIZE]).cache("validation.cache")
 
     if configs[INCLUDE_AUG]:
-        train_dataset = ds.augment_batched_dataset(train_dataset)
+        train_dataset = aug.augment_batched_dataset(train_dataset)
 
     model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:

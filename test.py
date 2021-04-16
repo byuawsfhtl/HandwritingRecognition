@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 import hwr.dataset as ds
 from hwr.metrics import ErrorRates
-from hwr.models import FlorRecognizer, GTRRecognizer
+from hwr.models import FlorRecognizer
 from hwr.util import model_inference, bp_decode
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
@@ -38,7 +38,8 @@ def test(args):
 
     Configuration File Arguments:
     * csv_path: The path to the csv file
-    * dataset_eval_size: How much of the dataset should be used when testing and acquiring error rates. Float between 0-1.
+    * dataset_eval_size: How much of the dataset should be used when testing and acquiring error rates.
+                         Float between 0-1.
     * batch_size: The number of images to be used in a batch
     * max_seq_size: The max number of characters in a line-level transcription
     * charset: String including all characters to be represented in the network (abcdef1234...)
