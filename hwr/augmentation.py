@@ -57,19 +57,23 @@ def batch_random_grid_warp_distortions(batch, grid_interval, stddev):
 
     @return: The warped batch
     """
+    batch_shape = tf.shape(batch)
+
     # Create grid of control points based on height, width, and grid interval
-    row_list = tf.range(0, batch.shape[1], delta=grid_interval, dtype=tf.float32)
-    column_list = tf.range(0, batch.shape[2], delta=grid_interval, dtype=tf.float32)
-    control_points = tf.transpose([tf.tile(row_list, column_list.shape), tf.repeat(column_list, len(row_list))])
+    row_list = tf.range(0, batch_shape[1], delta=grid_interval, dtype=tf.float32)
+    column_list = tf.range(0, batch_shape[2], delta=grid_interval, dtype=tf.float32)
+    control_points = tf.transpose([tf.tile(row_list, tf.shape(column_list)), tf.repeat(column_list, len(row_list))])
 
     # Sample from normal distribution with mean 0 and stddev as given by parameter
-    random_distortions = tf.random.normal((batch.shape[0], control_points.shape[0], control_points.shape[1]),
+    random_distortions = tf.random.normal((batch_shape[0], tf.shape(control_points)[0], tf.shape(control_points)[1]),
                                           mean=0, stddev=stddev)
 
     # Apply the distortion - with broadcasting
     destination_points = control_points + random_distortions
 
-    warped_batch, _ = tfa.image.sparse_image_warp(batch, control_points, destination_points)
+    # Tensorflow add-ons uses non-tf functions to perform this operation
+    warped_batch, _ = tf.py_function(tfa.image.sparse_image_warp, [batch, control_points, destination_points],
+                                     [tf.float32, tf.float32])
 
     return warped_batch
 
