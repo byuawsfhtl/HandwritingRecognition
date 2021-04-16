@@ -1,28 +1,77 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 
-def augment_batched_dataset(ds):
+def augment_batched_dataset(ds, random_noise=True, bleedthrough=True, random_grid_warp=True,
+                            rgw_interval=None, rgw_stddev=None):
     """
     Maps the batches within a dataset to augment them.
 
     :param ds: the dataset to augment
+    :param random_noise: Boolean indicating whether or not to apply random noise to the background of the image
+    :param bleedthrough: Boolean indicating whether or not to apply the bleedthrough augmentation
+    :param random_grid_warp: Boolean indicating whether or not to apply the random grid warp augmentation
+    :param rgw_interval: The interval in pixels between control points on the grid
+    :param rgw_stddev: The standard deviation used when distorting control points by sampling from a normal distribution
     :return the augmented dataset
     """
-    return ds.map(lambda img, trans: (augment_batch(img), trans))
+    return ds.map(lambda img, trans: (augment_batch(img, noise_augmentation=random_noise,
+                                                    bleedthrough_augmentation=bleedthrough,
+                                                    random_grid_warp=random_grid_warp, rgw_interval=rgw_interval,
+                                                    rgw_stddev=rgw_stddev), trans))
 
 
-def augment_batch(batch):
+def augment_batch(batch, noise_augmentation=True, bleedthrough_augmentation=True, random_grid_warp=True,
+                  rgw_interval=None, rgw_stddev=None):
     """
     Randomly applies different augmentations to the given batch.
 
     :param batch: the batch to augment
+    :param noise_augmentation: Boolean indicating whether or not to apply random noise to the background of the image
+    :param bleedthrough_augmentation: Boolean indicating whether or not to apply the bleedthrough augmentation
+    :param random_grid_warp: Boolean indicating whether or not to apply the random grid warp augmentation
+    :param rgw_interval: The interval in pixels between control points on the grid
+    :param rgw_stddev: The standard deviation used when distorting control points by sampling from a normal distribution
     :return: the augmented batch
     """
-    if tf.random.uniform([]) < 0.5:
+    if bleedthrough_augmentation and tf.random.uniform([]) < 0.5:
         batch = double_batch_bleed_through(batch)
-    if tf.random.uniform([]) < 0.5:
+    if noise_augmentation and tf.random.uniform([]) < 0.5:
         batch = add_noise(batch)
+    if random_grid_warp:
+        batch = batch_random_grid_warp_distortions(batch, rgw_interval, rgw_stddev)
+
     return batch
+
+
+def batch_random_grid_warp_distortions(batch, grid_interval, stddev):
+    """
+    Perform a Random Grid Warp Distortion Augmentation on a batch of images as given in the following paper:
+
+    Data Augmentation for Recognition of Handwritten Words and Lines Using a CNN-LSTM Network
+    https://ieeexplore.ieee.org/abstract/document/8270041
+
+    @param batch: The batch of images (batch x height x width)
+    @param grid_interval: The interval between control points on the grid
+    @param stddev: The standard deviation used when distorting control points by sampling from a normal distribution
+
+    @return: The warped batch
+    """
+    # Create grid of control points based on height, width, and grid interval
+    row_list = tf.range(0, batch.shape[1], delta=grid_interval, dtype=tf.float32)
+    column_list = tf.range(0, batch.shape[2], delta=grid_interval, dtype=tf.float32)
+    control_points = tf.transpose([tf.tile(row_list, column_list.shape), tf.repeat(column_list, len(row_list))])
+
+    # Sample from normal distribution with mean 0 and stddev as given by parameter
+    random_distortions = tf.random.normal((batch.shape[0], control_points.shape[0], control_points.shape[1]),
+                                          mean=0, stddev=stddev)
+
+    # Apply the distortion - with broadcasting
+    destination_points = control_points + random_distortions
+
+    warped_batch, _ = tfa.image.sparse_image_warp(batch, control_points, destination_points)
+
+    return warped_batch
 
 
 def add_noise(img):

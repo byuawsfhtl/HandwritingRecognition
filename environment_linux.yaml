@@ -6,6 +6,7 @@ channels:
 - byu-handwriting-lab
 dependencies:
 - python=3.7.3
+- pip=20.3.3
 - tensorflow-gpu=2.2.0
 - anaconda::numpy=1.19.1
 - anaconda::pyyaml=5.3.1
@@ -14,3 +15,5 @@ dependencies:
 - anaconda::tqdm=4.50.2
 - conda-forge::editdistance=0.5.3
 - byu-handwriting-lab::word_beam_search=0.1
+- pip:
+    - tensorflow-addons==0.10.0

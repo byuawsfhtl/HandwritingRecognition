@@ -16,3 +16,4 @@ dependencies:
 - byu-handwriting-lab::word_beam_search=0.1
 - pip:
     - tensorflow==2.3.0
+    - tensorflow-addons==0.11.1

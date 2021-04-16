@@ -18,7 +18,11 @@ LEARNING_RATE = 'learning_rate'
 MAX_SEQ_SIZE = 'max_seq_size'
 IMG_SIZE = 'img_size'
 CHARSET = 'charset'
-INCLUDE_AUG = 'augmentation'
+APPLY_NOISE_AUGMENTATION = 'apply_noise_augmentation'
+APPLY_BLEEDTHROUGH_AUGMENTATION = 'apply_bleedthrough_augmentation'
+APPLY_GRID_WARP_AUGMENTATION = 'apply_grid_warp_augmentation'
+GRID_WARP_INTERVAL = 'grid_warp_interval'
+GRID_WARP_STDDEV = 'grid_warp_stddev'
 
 
 def train_model(args):
@@ -92,8 +96,13 @@ def train_model(args):
                                                       eval(configs[IMG_SIZE]))\
             .batch(configs[BATCH_SIZE]).cache("validation.cache")
 
-    if configs[INCLUDE_AUG]:
-        train_dataset = aug.augment_batched_dataset(train_dataset)
+    if configs[APPLY_GRID_WARP_AUGMENTATION] or configs[APPLY_BLEEDTHROUGH_AUGMENTATION] \
+            or configs[APPLY_NOISE_AUGMENTATION]:
+        train_dataset = aug.augment_batched_dataset(train_dataset, random_noise=configs[APPLY_NOISE_AUGMENTATION],
+                                                    bleedthrough=configs[APPLY_BLEEDTHROUGH_AUGMENTATION],
+                                                    random_grid_warp=configs[APPLY_GRID_WARP_AUGMENTATION],
+                                                    rgw_interval=configs.get(GRID_WARP_INTERVAL, None),
+                                                    rgw_stddev=configs.get(GRID_WARP_STDDEV, None))
 
     model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:
