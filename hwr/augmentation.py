@@ -8,7 +8,7 @@ def augment_batched_dataset(ds):
     :param ds: the dataset to augment
     :return the augmented dataset
     """
-    return ds.map(lambda img, trans : (augment_batch(img), trans))
+    return ds.map(lambda img, trans: (augment_batch(img), trans))
 
 
 def augment_batch(batch):
@@ -45,10 +45,10 @@ def reverse_and_lighten(img):
     :param img: the image/batch tensor to reverse and lighten
     :return: a reversed, lightened version on the input tensor
     """
-    img = tf.reverse(img, [2]) # reverse on x dimension
-    img = img - 255 # shift so that 0 is white, black negative
-    img = tf.math.scalar_mul(tf.constant(0.3, dtype=tf.dtypes.float32), img) # scale towards 0 to make it less
-    img = img + 255 # shift so that 0 is white, black negative
+    img = tf.reverse(img, [2])  # reverse on x dimension
+    img = img - 255  # shift so that 0 is white, black negative
+    img = tf.math.scalar_mul(tf.constant(0.3, dtype=tf.dtypes.float32), img)  # scale towards 0 to make it less
+    img = img + 255  # shift so that 0 is white, black negative
     return img
 
 
@@ -61,7 +61,8 @@ def batch_bleed_through(img):
     :param img: a batch of lines to augment.
     :return: the batch of lines simulating text bleeding through the page.
     """
-    rolled = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0) # roll on batch dimensions
+    # roll on batch dimensions
+    rolled = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0)
     return tf.minimum(img, reverse_and_lighten(rolled))
 
 
@@ -72,8 +73,10 @@ def double_batch_bleed_through(img):
     falls between them. This is done to simulate text bleeding through from the other
     side of the page.
     """
-    rolled = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0) # roll on batch dimensions
-    rolled2 = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0) # roll on batch dimensions
+    # roll on batch dimensions
+    rolled = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0)
+    rolled2 = tf.roll(img, shift=tf.random.uniform(shape=[], maxval=tf.shape(img)[0], dtype=tf.int32), axis=0)
     rolled = tf.concat([rolled, rolled2], 1)
-    rolled = tf.slice(rolled, [0, tf.random.uniform(shape=[], maxval=tf.shape(rolled)[1] - tf.shape(img)[1], dtype=tf.int32), 0, 0], tf.shape(img))
+    rolled = tf.slice(rolled, [0, tf.random.uniform(shape=[], maxval=tf.shape(rolled)[1] - tf.shape(img)[1],
+                                                    dtype=tf.int32), 0, 0], tf.shape(img))
     return tf.minimum(img, reverse_and_lighten(rolled))
