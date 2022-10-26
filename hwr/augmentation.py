@@ -18,7 +18,7 @@ def augment_batched_dataset(ds, random_noise=True, bleedthrough=True, random_gri
     return ds.map(lambda img, trans: (augment_batch(img, noise_augmentation=random_noise,
                                                     bleedthrough_augmentation=bleedthrough,
                                                     random_grid_warp=random_grid_warp, rgw_interval=rgw_interval,
-                                                    rgw_stddev=rgw_stddev), trans))
+                                                    rgw_stddev=rgw_stddev), trans), num_parallel_calls=tf.data.AUTOTUNE)
 
 
 def augment_batch(batch, noise_augmentation=True, bleedthrough_augmentation=True, random_grid_warp=True,
