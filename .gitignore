@@ -9,4 +9,4 @@ data/*
 *.sh
 slurm*
 **/.DS_Store
-*.cache.*
+*.cache*
