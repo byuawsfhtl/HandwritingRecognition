@@ -7,6 +7,7 @@ import hwr.augmentation as aug
 from hwr.models import FlorRecognizer
 from hwr.training import ModelTrainer
 from hwr.util import remove_file_with_wildcard
+import random
 
 TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
@@ -72,13 +73,13 @@ def train_model(args):
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
     # Remove previous cache files if they currently exist
-    remove_file_with_wildcard("train.cache.*")
-    remove_file_with_wildcard("validation.cache.*")
 
     charset = configs[CHARSET] if configs[CHARSET] else ds.DEFAULT_CHARS  # If no charset is given, use default
     char2idx = ds.get_char2idx(charset=charset)
 
     # Create train/validation datasets depending on configuration settings
+
+    run_id = str(int(random.random()*1000000000))
 
     # Split the train dataset depending on if the val_csv_path is empty
     if not configs[VAL_CSV_PATH]:  # Will evaluate to False if empty
@@ -88,11 +89,11 @@ def train_model(args):
 
         dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                   eval(configs[IMG_SIZE]))
-        train_dataset = dataset.take(train_dataset_size).cache("train.cache")\
+        train_dataset = dataset.take(train_dataset_size).cache("caches/train.cache" + run_id)\
             .shuffle(10000, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = dataset.skip(train_dataset_size)\
-            .batch(configs[BATCH_SIZE]).cache("validation.cache")
+            .batch(configs[BATCH_SIZE]).cache("caches/validation.cache" + run_id)
 
     else:  # Use the data as given in the train/validation csv files - no additional splits performed
         train_dataset_size = ds.get_dataset_size(configs[TRAIN_CSV_PATH])
@@ -100,11 +101,11 @@ def train_model(args):
 
         train_dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                         eval(configs[IMG_SIZE]))\
-            .cache("train.cache").shuffle(10000, reshuffle_each_iteration=True)\
+            .cache("caches/train.cache" + run_id).shuffle(10000, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
         val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                                       eval(configs[IMG_SIZE]))\
-            .batch(configs[BATCH_SIZE]).cache("validation.cache")
+            .batch(configs[BATCH_SIZE]).cache("caches/validation.cache" + run_id)
 
     if configs[APPLY_GRID_WARP_AUGMENTATION] or configs[APPLY_BLEEDTHROUGH_AUGMENTATION] \
             or configs[APPLY_NOISE_AUGMENTATION]:
