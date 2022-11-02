@@ -65,12 +65,11 @@ def test(args):
     idx2char = ds.get_idx2char(charset=charset)
 
     dataset_size = ds.get_dataset_size(configs[CSV_PATH])
+    dataset_size = int(dataset_size * configs[DATASET_EVAL_SIZE])
     dataset = ds.get_encoded_dataset_from_csv(configs[CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
                                               eval(configs[IMG_SIZE]))\
-        .skip(int(dataset_size * (1 - configs[DATASET_EVAL_SIZE])))\
+        .take(dataset_size)\
         .batch(configs[BATCH_SIZE])
-    # Recalculate dataset size after skipping part of the dataset as specified by dataset_eval_size parameter
-    dataset_size = dataset_size - int(dataset_size * (1 - configs[DATASET_EVAL_SIZE]))
 
     model = FlorRecognizer(vocabulary_size=len(charset) + 1)
     if configs[MODEL_IN]:
