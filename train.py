@@ -123,7 +123,7 @@ def train_model(args):
     model_trainer = ModelTrainer(model, configs[EPOCHS], configs[BATCH_SIZE], train_dataset, train_dataset_size,
                                  val_dataset, val_dataset_size, configs[MODEL_OUT], lr=configs[LEARNING_RATE],
                                  max_seq_size=configs[MAX_SEQ_SIZE])
-    model, losses = model_trainer.train()
+    model, losses = model_trainer.train_SAM()
 
     # Print the losses over the course of training
     print('Train Losses:', losses[0])

@@ -36,6 +36,7 @@ class ModelTrainer:
         self.val_dataset_size = val_dataset_size
         self.model_out = model_out
         self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=lr)
+        self.optimizerSAM = SAM(self.optimizer)
         self.max_seq_size = max_seq_size
         self.train_loss = tf.keras.metrics.Mean(name='train_loss')
         self.val_loss = tf.keras.metrics.Mean(name='val_loss')
@@ -163,6 +164,87 @@ class ModelTrainer:
         except Exception as e:
             print("Error: {0}".format(e))
         finally:
+            tf.print('Finished Training')
+            return self.model, (train_losses, val_losses)
+
+    @tf.function
+    def train_step_SAM(self, images, labels):
+        with tf.GradientTape() as tape:
+          iter_batch_size = images.shape[0]
+          #print('iter_batch_size: ', iter_batch_size)
+          # Items needed for CTC-Loss
+          input_lengths = tf.constant(np.full((iter_batch_size,), self.max_seq_size))
+          label_lengths = tf.math.count_nonzero(labels, axis=1)
+          unique_labels = tf.nn.ctc_unique_labels(labels)
+          #tf.print('input_lengths: ', input_lengths)
+          #tf.print('label_lengths: ', label_lengths)
+          #tf.print('unique_labels: ', unique_labels)
+          predictions = self.model(images, training=True)
+          #tf.print('predictions: ', predictions)
+          #loss = loss_object(labels, predictions)
+          # Calculate the loss
+          loss = tf.nn.ctc_loss(labels, predictions, label_lengths, input_lengths,
+                                logits_time_major=False, unique=unique_labels)
+          #tf.print('loss: ', loss)
+          loss = tf.reduce_mean(loss)
+          #tf.print('reduce_mean loss: ', loss)
+        gradients = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizerSAM.first_step(gradients, self.model.trainable_variables)
+        with tf.GradientTape() as tape:
+            iter_batch_size = images.shape[0]
+            # Items needed for CTC-Loss
+            input_lengths = tf.constant(np.full((iter_batch_size,), self.max_seq_size))
+            label_lengths = tf.math.count_nonzero(labels, axis=1)
+            unique_labels = tf.nn.ctc_unique_labels(labels)
+            #tf.print('input_lengths: ', input_lengths)
+            #tf.print('label_lengths: ', label_lengths)
+            #tf.print('unique_labels: ', unique_labels)
+            predictions = self.model(images, training=True)
+            #tf.print('predictions: ', predictions)
+            #loss = loss_object(labels, predictions)
+            # Calculate the loss
+            loss = tf.nn.ctc_loss(labels, predictions, label_lengths, input_lengths,
+                                  logits_time_major=False, unique=unique_labels)
+            #tf.print('loss: ', loss)
+            loss = tf.reduce_mean(loss)
+            #tf.print('reduce_mean loss: ', loss)
+        gradients = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizerSAM.second_step(gradients, self.model.trainable_variables)
+        self.train_loss(loss)
+
+    def train_SAM(self):
+        train_losses, val_losses = [], []
+        # Place in a try/except and return the model/metrics in case we want to stop midway through training
+        try:
+            # Main loop to go through each dataset for n epochs
+            for epoch in range(self.epochs):
+                # Reset our metrics for each epoch
+                self.train_loss.reset_states()
+                self.val_loss.reset_states()
+                # Train Loop
+                train_loop = tqdm(total=self.train_dataset_size // self.batch_size, position=0, leave=True)
+                for images, labels in self.train_dataset:
+                    # Take a train step and update our progress bar
+                    self.train_step_SAM(images, labels)
+                    train_loop.set_description('Train - Epoch: {}, Loss: {:.4f}'
+                                               .format(epoch, self.train_loss.result()))
+                    train_loop.update(1)
+                train_loop.close()
+                # Validation Loop
+                val_loop = tqdm(total=self.val_dataset_size // self.batch_size, position=0, leave=True)
+                for images, labels in self.val_dataset:
+                    # Take a validation step and update our progress bar
+                    self.validation_step(images, labels)
+                    val_loop.set_description('Val   - Epoch: {}, Loss: {:.4f}'
+                                             .format(epoch, self.val_loss.result()))
+                    val_loop.update(1)
+                val_loop.close()
+                train_losses.append(self.train_loss.result().numpy())
+                val_losses.append(self.val_loss.result().numpy())
+        except Exception as e:
+            print("Error: {0}".format(e))
+        finally:
+            # Save the model weights one last time and return the model/losses
             tf.print('Finished Training')
             return self.model, (train_losses, val_losses)
 
