@@ -50,3 +50,7 @@ By default, the output file will be located at:
 
 ```data/sample/inference.csv```
 
+
+## More options
+
+For more information about the other options available in the config files, see the README file in this directory.
