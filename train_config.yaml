@@ -29,7 +29,7 @@ epochs: 100
 # The number of images in a mini-batch
 batch_size: 10
 # The learning rate the optimizer uses during training
-learning_rate: 0.001  # DO NOT use scientific notation! Pyyaml interprets scientific notation as string.
+learning_rate: 0.0003  # DO NOT use scientific notation! Pyyaml interprets scientific notation as string.
 # The max number of characters in a line-level transcription
 max_seq_size: 128
 # The size which all images will be resized - (height, width)
