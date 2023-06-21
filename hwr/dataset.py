@@ -3,6 +3,7 @@ import os
 import csv
 import tensorflow as tf
 import pandas as pd
+import tarfile
 
 # The default list of characters used in the recognition model
 DEFAULT_CHARS = ' !"#$%&\'()*+,-./0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_`abcdefghijklmnopqrstuvwxyz|~£§¨«¬\xad' \
@@ -195,6 +196,24 @@ def img_resize_with_pad(img_tensor, desired_size, pad_value=255):
     return img_padded
 
 
+def encode_image(img_bytes, img_size=(64, 1024)):
+    """
+    Used by both encode_img_and_transcription (training) and encode_img_with_name (inference). This method
+    simply loads the image given a file path and performs the necessary encoding/resizing/transposing that
+    is necessary for use on the recognition model.
+
+    :param img_bytes: The bytes of the image
+    :param img_size: The size of the image after resizing/padding
+    :return: The encoded image in its tensor/integer representation
+    """
+    img = tf.image.decode_image(img_bytes, channels=1, expand_animations=False)
+    img = img_resize_with_pad(img, img_size)
+    img = tf.image.per_image_standardization(img)
+
+    return img
+
+
+
 def read_and_encode_image(img_path, img_size=(64, 1024)):
     """
     Used by both encode_img_and_transcription (training) and encode_img_with_name (inference). This method
@@ -206,11 +225,7 @@ def read_and_encode_image(img_path, img_size=(64, 1024)):
     :return: The encoded image in its tensor/integer representation
     """
     img_bytes = tf.io.read_file(img_path)
-    img = tf.image.decode_image(img_bytes, channels=1, expand_animations=False)
-    img = img_resize_with_pad(img, img_size)
-    img = tf.image.per_image_standardization(img)
-
-    return img
+    return encode_image(img_bytes, img_size)
 
 
 def encode_img_and_transcription(img_path, transcription, char2idx, sequence_size=128, img_size: tuple = (64, 1024)):
@@ -250,6 +265,54 @@ def get_dataset_size(csv_path):
     :return: The size of the dataset
     """
     return len(pd.read_csv(csv_path, sep='\t', header=None, names=['img_path', 'transcription'], quoting=csv.QUOTE_NONE))
+
+def get_encoded_dataset_from_tar(tar_path, csv_path, char2idx, max_seq_size, img_size):
+    """
+    Using the tf.data api, load the desired csv with img_path and transcription data, encode the images and
+    transcriptions for use on the recognition model and return the desired tf dataset.
+
+    :param tar_path: The path to a tar file with all of the images.
+    :param csv_path: The path to the tab delimited csv file containing | Image Path | Transcription |
+    :param char2idx: The tf lookup table to map characters to their respective integer representation
+    :param max_seq_size: The final sequence length for transcriptions
+    :param img_size: The size of the image after resizing/padding (height, width).
+    :return: The tf dataset containing encoded images and their respective transcriptions
+    """
+
+    print('Loading dataset from tar')
+    
+    with open(csv_path, 'r') as file:
+        labels = {}
+        for line in file:
+            path, label = line.split('\t')
+            labels[path] = label.strip()
+
+    def generator():
+        with tarfile.open(tar_path, "r|*") as tar:
+            for member in tar:
+                path = member.name
+                if path in labels:
+                    image = tar.extractfile(member).read()
+                    label = labels[path]
+                    del labels[path]
+                    yield image, label
+
+        if len(labels):
+            print('Error, images not found in tar:')
+            for path in labels:
+                print(path)
+            raise Exception(f'{len(labels)} images not found in tar.')
+    
+    return tf.data.Dataset.from_generator(
+        generator,
+        output_signature=(
+            tf.TensorSpec(shape=(), dtype=tf.string),
+            tf.TensorSpec(shape=(), dtype=tf.string)
+        )
+    ).map(
+        lambda img_data, label: (encode_image(img_data), str_to_idxs(label, char2idx, max_seq_size)),
+        num_parallel_calls=tf.data.experimental.AUTOTUNE
+    )
 
 
 def get_encoded_dataset_from_csv(csv_path, char2idx, max_seq_size, img_size):

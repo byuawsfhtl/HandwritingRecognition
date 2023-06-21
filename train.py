@@ -9,6 +9,7 @@ from hwr.training import ModelTrainer
 from hwr.util import remove_file_with_wildcard
 import random
 
+IMAGE_TAR_PATH = 'image_tar_path'
 TRAIN_CSV_PATH = 'train_csv_path'
 VAL_CSV_PATH = 'val_csv_path'
 SPLIT_TRAIN_SIZE = 'split_train_size'
@@ -87,8 +88,12 @@ def train_model(args):
         train_dataset_size = int(configs[SPLIT_TRAIN_SIZE] * dataset_size)
         val_dataset_size = dataset_size - train_dataset_size
 
-        dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
-                                                  eval(configs[IMG_SIZE]))
+        args = [configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE], eval(configs[IMG_SIZE])]
+        if IMAGE_TAR_PATH in configs:
+            dataset = ds.get_encoded_dataset_from_tar(configs[IMAGE_TAR_PATH], *args)
+        else:
+            dataset = ds.get_encoded_dataset_from_csv(*args)
+
         train_dataset = dataset.take(train_dataset_size).cache("caches/train.cache" + run_id)\
             .shuffle(10000, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
@@ -99,13 +104,26 @@ def train_model(args):
         train_dataset_size = ds.get_dataset_size(configs[TRAIN_CSV_PATH])
         val_dataset_size = ds.get_dataset_size(configs[VAL_CSV_PATH])
 
-        train_dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
-                                                        eval(configs[IMG_SIZE]))\
-            .cache("caches/train.cache" + run_id).shuffle(10000, reshuffle_each_iteration=True)\
+        args = [char2idx, configs[MAX_SEQ_SIZE], eval(configs[IMG_SIZE])]
+        if IMAGE_TAR_PATH in configs:
+            train_dataset = ds.get_encoded_dataset_from_tar(
+                configs[IMAGE_TAR_PATH],
+                configs[TRAIN_CSV_PATH],
+                *args
+                )
+            val_dataset = ds.get_encoded_dataset_from_tar(
+                configs[IMAGE_TAR_PATH],
+                configs[VAL_CSV_PATH],
+                *args
+                )
+        else:
+            train_dataset = ds.get_encoded_dataset_from_csv(configs[TRAIN_CSV_PATH], *args)
+            val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], *args)
+
+        train_dataset = train_dataset.cache("caches/train.cache" + run_id)\
+            .shuffle(10000, reshuffle_each_iteration=True)\
             .batch(configs[BATCH_SIZE])
-        val_dataset = ds.get_encoded_dataset_from_csv(configs[VAL_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
-                                                      eval(configs[IMG_SIZE]))\
-            .batch(configs[BATCH_SIZE]).cache("caches/validation.cache" + run_id)
+        val_dataset = val_dataset.batch(configs[BATCH_SIZE]).cache("caches/validation.cache" + run_id)
 
     if configs[APPLY_GRID_WARP_AUGMENTATION] or configs[APPLY_BLEEDTHROUGH_AUGMENTATION] \
             or configs[APPLY_NOISE_AUGMENTATION]:
