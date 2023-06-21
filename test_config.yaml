@@ -1,3 +1,5 @@
+# Optional path to tar with images, speeds up loading the dataset as a single file when large
+image_tar_path:
 # The path to a tab-delimited CSV file containing training data information formatted as | IMG_PATH | Transcription |
 csv_path: ./data/example/labels.csv
 # How much of the dataset should be used when testing and acquiring error rates

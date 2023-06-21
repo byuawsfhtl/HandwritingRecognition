@@ -89,7 +89,7 @@ def train_model(args):
         val_dataset_size = dataset_size - train_dataset_size
 
         args = [configs[TRAIN_CSV_PATH], char2idx, configs[MAX_SEQ_SIZE], eval(configs[IMG_SIZE])]
-        if IMAGE_TAR_PATH in configs:
+        if configs[IMAGE_TAR_PATH]:
             dataset = ds.get_encoded_dataset_from_tar(configs[IMAGE_TAR_PATH], *args)
         else:
             dataset = ds.get_encoded_dataset_from_csv(*args)
@@ -105,7 +105,7 @@ def train_model(args):
         val_dataset_size = ds.get_dataset_size(configs[VAL_CSV_PATH])
 
         args = [char2idx, configs[MAX_SEQ_SIZE], eval(configs[IMG_SIZE])]
-        if IMAGE_TAR_PATH in configs:
+        if configs[IMAGE_TAR_PATH]:
             train_dataset = ds.get_encoded_dataset_from_tar(
                 configs[IMAGE_TAR_PATH],
                 configs[TRAIN_CSV_PATH],

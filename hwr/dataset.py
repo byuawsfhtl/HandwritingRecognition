@@ -278,9 +278,6 @@ def get_encoded_dataset_from_tar(tar_path, csv_path, char2idx, max_seq_size, img
     :param img_size: The size of the image after resizing/padding (height, width).
     :return: The tf dataset containing encoded images and their respective transcriptions
     """
-
-    print('Loading dataset from tar')
-    
     with open(csv_path, 'r') as file:
         labels = {}
         for line in file:
@@ -310,7 +307,7 @@ def get_encoded_dataset_from_tar(tar_path, csv_path, char2idx, max_seq_size, img
             tf.TensorSpec(shape=(), dtype=tf.string)
         )
     ).map(
-        lambda img_data, label: (encode_image(img_data), str_to_idxs(label, char2idx, max_seq_size)),
+        lambda img_data, label: (encode_image(img_data, img_size), str_to_idxs(label, char2idx, max_seq_size)),
         num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 

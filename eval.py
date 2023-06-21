@@ -14,7 +14,7 @@ from hwr.wbs.decoder import WordBeamSearch
 import tensorflow as tf
 
 
-
+IMAGE_TAR_PATH = 'image_tar_path'
 CSV_PATH = 'csv_path'
 DATASET_EVAL_SIZE = 'dataset_eval_size'
 MODEL_IN = 'model_in'
@@ -69,9 +69,14 @@ def test(args):
 
     dataset_size = ds.get_dataset_size(configs[CSV_PATH])
     dataset_size = int(dataset_size * configs[DATASET_EVAL_SIZE])
-    dataset = ds.get_encoded_dataset_from_csv(configs[CSV_PATH], char2idx, configs[MAX_SEQ_SIZE],
-                                              eval(configs[IMG_SIZE]))\
-        .take(dataset_size)\
+
+    dataset_args = [configs[CSV_PATH], char2idx, configs[MAX_SEQ_SIZE], eval(configs[IMG_SIZE])]
+    if configs[IMAGE_TAR_PATH]:
+        dataset = ds.get_encoded_dataset_from_tar(configs[IMAGE_TAR_PATH], *dataset_args)
+    else:
+        dataset = ds.get_encoded_dataset_from_csv(*dataset_args)
+
+    dataset = dataset.take(dataset_size)\
         .batch(configs[BATCH_SIZE])
 
     model = FlorRecognizer(vocabulary_size=len(charset) + 1)
