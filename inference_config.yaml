@@ -1,5 +1,7 @@
 # INFERENCE CONFIGURATION FILE
 
+# Optional path to tar with images, speeds up loading the dataset as a single file when large
+image_tar_path:
 # The path to the images to be inferred
 img_path: ./data/example/test_images
 # Include subdirectories of img_path, if set to False any directories within img_path will be ignored

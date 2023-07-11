@@ -333,6 +333,41 @@ def get_encoded_dataset_from_csv(csv_path, char2idx, max_seq_size, img_size):
         num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
 
+def get_inference_dataset_from_tar(tar_path, prefix, img_size):
+    """
+    Using the tf.data api, load the desired csv with img_path and transcription data, encode the images and
+    transcriptions for use on the recognition model and return the desired tf dataset.
+
+    :param tar_path: The path to a tar file with all of the images.
+    :param prefix: Filter the inference images to a prefix
+    :param img_size: The size of the image after resizing/padding (height, width).
+    :return: The tf dataset containing encoded images and their paths in the tar
+    """
+
+    if prefix is None: prefix = ''
+
+    supported_types = set(['bmp', 'gif', 'jpg', 'jpeg', 'png'])
+
+    def generator():
+        with tarfile.open(tar_path, "r|*") as tar:
+            for member in tar:
+                path = member.name
+                if path.startswith(prefix) and '.' in path and path[path.rindex('.')+1:] in supported_types:
+                    image = tar.extractfile(member).read()
+                    yield image, path
+    
+    return tf.data.Dataset.from_generator(
+        generator,
+        output_signature=(
+            tf.TensorSpec(shape=(), dtype=tf.string),
+            tf.TensorSpec(shape=(), dtype=tf.string)
+        )
+    ).map(
+        lambda img_data, path: (encode_image(img_data, img_size), path),
+        num_parallel_calls=tf.data.experimental.AUTOTUNE
+    )
+
+
 def get_encoded_inference_dataset_from_img_path(img_path, img_size, include_subdirs=False):
     """
     Using the tf.data api, load all images from the desired path and return a dataset containing encoded images
