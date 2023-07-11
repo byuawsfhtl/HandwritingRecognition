@@ -7,7 +7,7 @@ from tqdm import tqdm
 import hwr.dataset as ds
 from hwr.metrics import ErrorRates
 from hwr.models import FlorRecognizer
-from hwr.util import model_inference, bp_decode
+from hwr.util import model_inference, bp_decode, beam_search_decode
 from hwr.wbs.loader import DictionaryLoader
 from hwr.wbs.decoder import WordBeamSearch
 
@@ -91,6 +91,7 @@ def test(args):
 
     # Create lists to store labels and predictions for various decoding methods
     bp_predictions = []
+    bs_predictions = []
     wbs_predictions = []
     actual_labels = []
 
@@ -102,6 +103,7 @@ def test(args):
 
         bp_prediction = bp_decode(output)
         wbs_prediction = wbs.decode(output)
+        bs_pred = beam_search_decode(output) 
 
         # Perform best-path decoding, map to strings, and append to prediction list
         str_bp_prediction = ds.idxs_to_str_batch(bp_prediction, idx2char, merge_repeated=True)
@@ -111,31 +113,42 @@ def test(args):
         str_wbs_prediction = ds.idxs_to_str_batch(wbs_prediction, idx2char, merge_repeated=True)
         wbs_predictions.extend(bytes_to_unicode(str_wbs_prediction))
 
+        # Perform word-beam-search decoding, map to strings, and append to prediction list
+        str_bs_pred = ds.idxs_to_str_batch(bs_pred, idx2char, merge_repeated=True)
+        bs_predictions.extend(bytes_to_unicode(str_bs_pred))
+
         # Get labels, map to strings, and append to label list
         str_labels = ds.idxs_to_str_batch(labels, idx2char, merge_repeated=False)
         actual_labels.extend(bytes_to_unicode(str_labels))
         loop.update(1)
+
     loop.close()
 
     # Calculate error rates by iterating over the predictions/labels
     bp_rates = ErrorRates()
     wbs_rates = ErrorRates()
-    for bp_pred, wbs_pred, y_true in zip(bp_predictions, wbs_predictions, actual_labels):
+    bs_rates = ErrorRates()
+    for bp_pred, wbs_pred, bs_pred, y_true in zip(bp_predictions, wbs_predictions, bs_predictions, actual_labels):
         if configs[SHOW_PREDICTIONS]:
             print('Best Path Prediction:', bp_pred)
             print('Word Beam Search Prediction:', wbs_pred)
+            print('Beam Search Prediction:', bs_pred)
             print('Ground Truth:', y_true)
         bp_rates.update(y_true, bp_pred)
         wbs_rates.update(y_true, wbs_pred)
+        bs_rates.update(y_true, bs_pred)
 
     bp_cer, bp_wer = bp_rates.get_error_rates()
     wbs_cer, wbs_wer = wbs_rates.get_error_rates()
+    bs_cer, bs_wer = bs_rates.get_error_rates()
 
     # Print the error rates to the console
     print('Best Path - Character Error Rate: {:.4f}%'.format(bp_cer * 100))
     print('Best Path - Word Error Rate: {:.4f}%'.format(bp_wer * 100))
     print('Word Beam Search - Character Error Rate: {:.4f}%'.format(wbs_cer * 100))
     print('Word Beam Search - Word Error Rate: {:.4f}%'.format(wbs_wer * 100))
+    print('Beam Search - Character Error Rate: {:.4f}%'.format(bs_cer * 100))
+    print('Beam Search - Word Error Rate: {:.4f}%'.format(bs_wer * 100))
 
 
 def bytes_to_unicode(byte_string_tensor):

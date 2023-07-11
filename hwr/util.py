@@ -21,6 +21,30 @@ def model_inference(model, imgs):
 
 
 @tf.function
+def beam_search_decode(output):
+    """
+    Uses tensorflow's built in beam search decoding for CTC.
+
+    This has not given significant improvements.
+
+    :param output: the model output, shape (batch, sequence, classes)
+    :return: the highest scored beam for each sequence in the batch (uses 5 beams)
+    """
+    output = tf.roll(output, -1, 2) # roll so that ctc blank is last
+
+    output = tf.transpose(output, perm=[1, 0, 2])
+
+    sequence_length = tf.constant(np.full((output.shape[1],), output.shape[0]), dtype=tf.int32)
+
+    decoded, log_probs = tf.nn.ctc_beam_search_decoder(output, sequence_length, beam_width=5, top_paths=1)
+
+    decoded = tf.sparse.to_dense(decoded[0], default_value=-1) # only take the top path
+    decoded += 1 # unroll ctc blank
+
+    return decoded
+
+
+@tf.function
 def bp_decode(output):
     """
     Best-path decoding from raw model output.
