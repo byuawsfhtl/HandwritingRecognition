@@ -2,7 +2,8 @@
 
 This project contains code necessary to perform handwriting recognition
 in TensorFlow 2. Using the provided scripts, the model can be trained and
-also used for inference.
+also used for inference.  This code is covered by the 
+[GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/).
 
 This project can be used by cloning the repository and running manually. However, it is also available in
 [Anaconda Cloud](https://anaconda.org/BYU-Handwriting-Lab/hwr) and can be used in any Conda environment.
